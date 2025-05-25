@@ -13,8 +13,29 @@ return new class extends Migration
     {
         Schema::create('comments', function (Blueprint $table) {
             $table->id();
+
+            // The user who wrote the comment
+            $table->foreignId('user_id')
+                ->constrained()
+                ->onDelete('cascade');
+
+            // The book the comment belongs to
+            $table->foreignId('book_id')
+                ->constrained()
+                ->onDelete('cascade');
+
+            // The actual text of the comment
+            $table->text('comment');
+
+            // Optional: if you want threaded/reply-to comments
+            $table->foreignId('parent_id')
+                ->nullable()
+                ->constrained('comments')
+                ->onDelete('cascade');
+
             $table->timestamps();
         });
+
     }
 
     /**
