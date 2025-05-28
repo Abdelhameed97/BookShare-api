@@ -62,15 +62,31 @@ class AuthController extends Controller
                 'message'=>'Invalid login details',
             ],401);
         }
+          
+        // check if user has any tokens
+        $tokens = $user->tokens()->count();
 
-        // create token
-        $token = $user->createToken('auth_token')->plainTextToken;
-
+        if($tokens > 2){
+            return response()->json([
+                'message' => 'You have exceeded the maximum number of login attempts.'
+            ], 401);
+        }else{
+            // create token
+            $token = $user->createToken('auth_token')->plainTextToken;
+        }
+        
         // return response
         return response()->json([
             'data'=>$user,
             'access_token'=>$token,
             'token_type'=>'Bearer',
+        ]);
+    }
+
+    public function logout(Request $request){
+        $request->user()->currentAccessToken()->delete();
+        return response()->json([
+            'message'=>'Logged out',
         ]);
     }
 }
