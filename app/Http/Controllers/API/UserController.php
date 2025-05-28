@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
+use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 
@@ -17,8 +18,9 @@ class UserController extends Controller
     public function index()
     {
         //
-        $user = User::all();
-        return response()->json(['users' => $user], 200);
+        return UserResource::collection(User::all());
+        // $user = User::all();
+        // return response()->json(['users' => $user], 200);
 
     }
 
