@@ -17,10 +17,15 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-    protected $fillable = [
+     protected $fillable = [
         'name',
         'email',
         'password',
+        'phone_number',
+        'national_id',
+        'id_image',
+        'role',
+        'location',
     ];
 
     /**
@@ -44,5 +49,36 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    // 🧠 Relationships
+
+    // User can have many books
+    public function books()
+    {
+        return $this->hasMany(Book::class);
+    }
+
+    // Wishlist: User can have many wishlisted books
+    public function wishlists()
+    {
+        return $this->hasMany(Wishlist::class);
+    }
+
+    public function wishlistBooks()
+    {
+        return $this->belongsToMany(Book::class, 'wishlists');
+    }
+
+    // Ratings given by this user
+    public function givenRatings()
+    {
+        return $this->hasMany(Rating::class, 'reviewer_id');
+    }
+
+    // Ratings received by this user
+    public function receivedRatings()
+    {
+        return $this->hasMany(Rating::class, 'reviewed_user_id');
     }
 }
