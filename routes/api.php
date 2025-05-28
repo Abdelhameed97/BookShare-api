@@ -1,13 +1,30 @@
 <?php
 
-use App\Http\Controllers\API\RatingController;
-use App\Http\Controllers\API\WishlistController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\UserController;
+use App\Http\Controllers\API\BookController;
+use App\Http\Controllers\API\CategoryController;
+use App\Http\Controllers\API\CommentController;
+use App\Http\Controllers\API\RatingController;
+use App\Http\Controllers\API\WishlistController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+});
+Route::apiResource('/user', UserController::class);
+
+//category
+Route::apiResource('/category', \App\Http\Controllers\API\CategoryController::class);
+// comment
+Route::apiResource('/comment', \App\Http\Controllers\API\CommentController::class)->middleware('auth:sanctum');
 
 // Ratings
 Route::get('/ratings', [RatingController::class, 'index']);

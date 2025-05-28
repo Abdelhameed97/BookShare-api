@@ -15,13 +15,20 @@ class Wishlist extends Model
         'book_id',
     ];
 
+    /**
+     * A wishlist belongs to a user.
+     */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * A wishlist belongs to a book.
+     */
     public function book()
     {
         return $this->belongsTo(Book::class);
     }
+
 }
