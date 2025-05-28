@@ -7,6 +7,8 @@ use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\BookController;
 use App\Http\Controllers\API\CategoryController;
 use App\Http\Controllers\API\CommentController;
+use App\Http\Controllers\API\RatingController;
+use App\Http\Controllers\API\WishlistController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -19,7 +21,26 @@ Route::middleware('auth:sanctum')->group(function(){
 });
 Route::apiResource('/user', UserController::class);
 
-//category 
+//category
 Route::apiResource('/category', \App\Http\Controllers\API\CategoryController::class);
 // comment
 Route::apiResource('/comment', \App\Http\Controllers\API\CommentController::class)->middleware('auth:sanctum');
+
+
+// Ratings
+Route::get('/ratings', [RatingController::class, 'index']);
+Route::get('/ratings/{id}', [RatingController::class, 'show']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/ratings', [RatingController::class, 'store']);
+    Route::put('/ratings/{id}', [RatingController::class, 'update']);
+    Route::delete('/ratings/{id}', [RatingController::class, 'destroy']);
+});
+
+// Wishlist
+Route::get('/Wishlist', [WishlistController::class, 'index']);
+Route::get('/Wishlist/{id}', [WishlistController::class, 'show']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/Wishlist', [WishlistController::class, 'store']);
+    Route::put('/Wishlist/{id}', [WishlistController::class, 'update']);
+    Route::delete('/Wishlist/{id}', [WishlistController::class, 'destroy']);
+});

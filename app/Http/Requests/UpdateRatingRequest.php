@@ -11,7 +11,7 @@ class UpdateRatingRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,11 @@ class UpdateRatingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'book_id' => 'required|exists:books,id',
+            'reviewer_id' => 'required|exists:users,id',
+            'reviewed_user_id' => 'required|exists:users,id|different:reviewer_id',
+            'rating' => 'required|integer|min:1|max:5',
+            'comment' => 'nullable|string|max:1000',
         ];
     }
 }

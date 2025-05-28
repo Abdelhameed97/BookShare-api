@@ -12,23 +12,24 @@ use App\Models\User;
 
 class AuthController extends Controller
 {
-    // register 
+    // register
     public function register(Request $request){
         $request->validate([
             'name'=>'required',
             'email'=>'required|email|unique:users',
             'password'=>'required|confirmed',
         ]);
-
+        
         $user = User::create([
-            'name'=>$request->name,
-            'email'=>$request->email,
-            'password'=>bcrypt($request->password),
-            'phone_number'=>$request->phone_number ?? '',
-        'national_id' => $request->national_id,
-            'id_image'=>$request->id_image ?? '',
-            'location'=>$request->location ?? '',
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => bcrypt($request->password),
+            'phone_number' => $request->phone_number ?? '',
+            'national_id' => $request->national_id,
+            'id_image' => $request->id_image ?? '',
+            'location' => $request->location ?? '',
         ]);
+
         $token = $user->createToken('auth_token')->plainTextToken;
         return response()->json([
             'data'=>$user,
@@ -36,8 +37,8 @@ class AuthController extends Controller
             'token_type'=>'Bearer',
         ]);
     }
-    
-    // login 
+
+    // login
     public function login(Request $request){
 
         // login validation
@@ -62,7 +63,7 @@ class AuthController extends Controller
                 'message'=>'Invalid login details',
             ],401);
         }
-          
+
         // check if user has any tokens
         $tokens = $user->tokens()->count();
 
@@ -74,7 +75,7 @@ class AuthController extends Controller
             // create token
             $token = $user->createToken('auth_token')->plainTextToken;
         }
-        
+
         // return response
         return response()->json([
             'data'=>$user,
