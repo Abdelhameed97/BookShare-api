@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\BookController;
+use App\Http\Controllers\API\CategoryController;
+use App\Http\Controllers\API\CommentController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -17,7 +19,6 @@ Route::middleware('auth:sanctum')->group(function(){
 });
 Route::apiResource('/user', UserController::class);
 
-
 // Book routes
 Route::get('/books', [BookController::class, 'index']);
 Route::get('/books/{book}', [BookController::class, 'show']);
@@ -29,3 +30,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/books/{book}', [BookController::class, 'destroy']);
 });
 
+//category 
+Route::apiResource('/category', CategoryController::class);
+
+// comment
+Route::apiResource('/comment', CommentController::class)->middleware('auth:sanctum');
