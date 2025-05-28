@@ -4,46 +4,62 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Category;
 
 class CommentController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        return Comment::with(['user', 'book', 'replies'])->get();
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $data = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'book_id' => 'required|exists:books,id',
+            'comment' => 'required|string',
+            'parent_id' => 'nullable|exists:comments,id',
+        ]);
+
+        $comment = Comment::create($data);
+
+        return response()->json($comment, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(Comment $comment)
     {
-        //
+        return $comment->load(['user', 'book', 'replies']);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Comment $comment)
     {
-        //
+        $data = $request->validate([
+            'comment' => 'required|string',
+        ]);
+
+        
+        if ($comment->user_id !== auth()->id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+            
+
+        $comment->update($data);
+
+        return response()->json($comment);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Comment $comment)
     {
-        //
+        $comment->delete();
+ 
+       
+
+        if ($comment->user_id !== auth()->id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        return response()->json(['message' => 'Comment deleted']);
     }
 }
+
