@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Category;
 
 class CommentController extends Controller
 {
@@ -37,11 +38,11 @@ class CommentController extends Controller
             'comment' => 'required|string',
         ]);
 
-        {/*}
+        
         if ($comment->user_id !== auth()->id()) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
-            */}
+            
 
         $comment->update($data);
 
@@ -52,12 +53,12 @@ class CommentController extends Controller
     {
         $comment->delete();
  
-       {/*
+       
 
         if ($comment->user_id !== auth()->id()) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
-*/}
+
         return response()->json(['message' => 'Comment deleted']);
     }
 }
