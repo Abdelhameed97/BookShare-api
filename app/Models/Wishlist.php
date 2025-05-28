@@ -22,7 +22,7 @@ class Wishlist extends Model
     {
         return $this->belongsTo(User::class);
     }
-
+ 
     /**
      * A wishlist belongs to a book.
      */
