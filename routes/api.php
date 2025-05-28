@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\BookController;
+
 use App\Http\Controllers\API\CategoryController;
 use App\Http\Controllers\API\CommentController;
 
@@ -21,13 +22,16 @@ Route::apiResource('/user', UserController::class);
 
 // Book routes
 Route::get('/books', [BookController::class, 'index']);
-Route::get('/books/{book}', [BookController::class, 'show']);
+Route::get('/books/{id}', [BookController::class, 'show']);
+Route::get('/books/all', [BookController::class, 'show']);
+
 
 // Protected book routes (require authentication)
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/books', [BookController::class, 'store']);
-    Route::put('/books/{book}', [BookController::class, 'update']);
-    Route::delete('/books/{book}', [BookController::class, 'destroy']);
+        Route::put('/books/{id}', [BookController::class, 'update']);
+    Route::delete('/books/{id}', [BookController::class, 'destroy']);
+
 });
 
 //category 
