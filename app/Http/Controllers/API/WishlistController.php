@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreWishlistRequest;
+use App\Models\Wishlist;
 use Illuminate\Http\Request;
 
 class WishlistController extends Controller
@@ -12,15 +14,18 @@ class WishlistController extends Controller
      */
     public function index()
     {
-        //
+        $wishlists = Wishlist::with(['user', 'book'])->get();
+        return response()->json($wishlists);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreWishlistRequest $request)
     {
-        //
+        $wishlist = Wishlist::create($request->validated());
+
+        return response()->json($wishlist, 201);
     }
 
     /**
@@ -28,7 +33,8 @@ class WishlistController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $wishlist = Wishlist::with(['user', 'book'])->findOrFail($id);
+        return response()->json($wishlist);
     }
 
     /**
@@ -36,7 +42,9 @@ class WishlistController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $wishlist = Wishlist::findOrFail($id);
+        $wishlist->update($request->validated());
+        return response()->json($wishlist);
     }
 
     /**
@@ -44,6 +52,8 @@ class WishlistController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $wishlist = Wishlist::findOrFail($id);
+        $wishlist->delete();
+        return response()->json(['message' => 'Rating deleted successfully']);
     }
 }
