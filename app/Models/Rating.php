@@ -13,7 +13,7 @@ class Rating extends Model
     protected $fillable = [
         'book_id',
         'reviewer_id',
-        'rewiewed_user_id',
+        'reviewed_user_id',
         'rating',
         'comment'
     ];
@@ -24,8 +24,8 @@ class Rating extends Model
     public function reviewer() {
         return $this->belongsTo(User::class, 'reviewer_id');
     }
-    public function rewiewedUser() {
-        return $this->belongsTo(User::class, 'rewiewed_user_id');
+    public function reviewedUser()
+    {
+        return $this->belongsTo(User::class, 'reviewed_user_id');
     }
-
 }

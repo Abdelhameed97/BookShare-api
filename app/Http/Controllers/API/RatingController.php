@@ -6,53 +6,91 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRatingRequest;
 use App\Http\Requests\UpdateRatingRequest;
 use App\Models\Rating;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class RatingController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        return response()->json(Rating::with(['book', 'reviewer', 'reviewedUser'])->get());
+        try {
+            $ratings = Rating::with(['book', 'reviewer', 'reviewedUser'])->get();
+            return response()->json(['success' => true, 'data' => $ratings]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to fetch ratings', 'error' => $e->getMessage()], 500);
+        }
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(StoreRatingRequest $request)
     {
-        $rating = Rating::create($request->validated());
-        return response()->json($rating, status: 201);
+        try {
+            $rating = Rating::create($request->validated());
+            return response()->json(['success' => true, 'message' => 'Rating created successfully', 'data' => $rating], 201);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to create rating', 'error' => $e->getMessage()], 500);
+        }
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
-        $rating = Rating::with(['book', 'reviewer', 'reviewedUser'])->findOrFail($id);
-        return response()->json($rating);
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+            }
+
+            $rating = Rating::with(['book', 'reviewer', 'reviewedUser'])->findOrFail($id);
+
+            if ($user->id !== $rating->reviewer_id && !$user->is_admin) {
+                return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
+            }
+
+            return response()->json(['success' => true, 'data' => $rating]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to fetch rating', 'error' => $e->getMessage()], 500);
+        }
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(UpdateRatingRequest $request, string $id)
     {
-        $rating = Rating::findOrFail($id);
-        $rating->update($request->validated());
-        return response()->json($rating);
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+            }
+
+            $rating = Rating::findOrFail($id);
+
+            if ($user->id !== $rating->reviewer_id && !$user->is_admin) {
+                return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
+            }
+
+            $rating->update($request->validated());
+
+            return response()->json(['success' => true, 'message' => 'Rating updated successfully', 'data' => $rating]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to update rating', 'error' => $e->getMessage()], 500);
+        }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
-        $rating = Rating::findOrFail($id);
-        $rating->delete();
-        return response()->json(['message' => 'Rating deleted successfully']);
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+            }
+
+            $rating = Rating::findOrFail($id);
+
+            if ($user->id !== $rating->reviewer_id && !$user->is_admin) {
+                return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
+            }
+
+            $rating->delete();
+
+            return response()->json(['success' => true, 'message' => 'Rating deleted successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to delete rating', 'error' => $e->getMessage()], 500);
+        }
     }
 }

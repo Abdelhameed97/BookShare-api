@@ -37,12 +37,12 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // Wishlist
-Route::get('/Wishlist', [WishlistController::class, 'index']);
-Route::get('/Wishlist/{id}', [WishlistController::class, 'show']);
+Route::get('/wishlist', [WishlistController::class, 'index']);
+Route::get('/wishlist/{id}', [WishlistController::class, 'show']);
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/Wishlist', [WishlistController::class, 'store']);
-    Route::put('/Wishlist/{id}', [WishlistController::class, 'update']);
-    Route::delete('/Wishlist/{id}', [WishlistController::class, 'destroy']);
+    Route::post('/wishlist', [WishlistController::class, 'store']);
+    Route::put('/wishlist/{id}', [WishlistController::class, 'update']);
+    Route::delete('/wishlist/{id}', [WishlistController::class, 'destroy']);
 });
 // Book routes
 Route::get('/books', [BookController::class, 'index']);
@@ -56,7 +56,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/books/{id}', [BookController::class, 'destroy']);
 
 });
-//category 
+//category
 Route::apiResource('/category', CategoryController::class);
 
 // comment
