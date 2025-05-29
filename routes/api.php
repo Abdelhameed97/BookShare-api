@@ -23,7 +23,6 @@ Route::apiResource('/user', UserController::class);
 // Book routes
 Route::get('/books', [BookController::class, 'index']);
 Route::get('/books/{id}', [BookController::class, 'show']);
-Route::get('/books/all', [BookController::class, 'show']);
 
 
 // Protected book routes (require authentication)
