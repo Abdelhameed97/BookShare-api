@@ -4,7 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\UserController;
-use App\Http\Controllers\API\BookController;
+use App\Http\Controllers\BookController;
+
 use App\Http\Controllers\API\CategoryController;
 use App\Http\Controllers\API\CommentController;
 use App\Http\Controllers\API\RatingController;
@@ -43,3 +44,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/Wishlist/{id}', [WishlistController::class, 'update']);
     Route::delete('/Wishlist/{id}', [WishlistController::class, 'destroy']);
 });
+// Book routes
+Route::get('/books', [BookController::class, 'index']);
+Route::get('/books/{id}', [BookController::class, 'show']);
+
+
+// Protected book routes (require authentication)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/books', [BookController::class, 'store']);
+        Route::put('/books/{id}', [BookController::class, 'update']);
+    Route::delete('/books/{id}', [BookController::class, 'destroy']);
+
+});
+
+
+//category 
+Route::apiResource('/category', CategoryController::class);
+
+// comment
+Route::apiResource('/comment', CommentController::class)->middleware('auth:sanctum');
