@@ -56,10 +56,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/books/{id}', [BookController::class, 'destroy']);
 
 });
-
-
 //category 
 Route::apiResource('/category', CategoryController::class);
 
 // comment
-Route::apiResource('/comment', CommentController::class)->middleware('auth:sanctum');
+Route::apiResource('/comment', CommentController::class);
