@@ -7,27 +7,26 @@ use Illuminate\Http\Request;
 
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
-
+use App\Http\Requests\StoreUserRequest;
 use App\Models\User;
 
 class AuthController extends Controller
 {
     // register
-    public function register(Request $request){
-        $request->validate([
-            'name'=>'required',
-            'email'=>'required|email|unique:users',
-            'password'=>'required|confirmed',
-        ]);
-        
+    public function register(StoreUserRequest $request){
+        // validate request
+        $validated = $request->validated();
+
+        // create user
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => bcrypt($request->password),
-            'phone_number' => $request->phone_number ?? '',
-            'national_id' => $request->national_id,
-            'id_image' => $request->id_image ?? '',
-            'location' => $request->location ?? '',
+            'name'=>$validated['name'],
+            'email'=>$validated['email'],
+            'password'=>Hash::make($validated['password']),
+            'role'=>$validated['role']??'client', // default role is client
+            'phone_number'=>$validated['phone_number']??null,
+            'national_id'=>$validated['national_id']??null,
+            'location'=>$validated['location']??null,
+
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -46,13 +45,6 @@ class AuthController extends Controller
             'email'=>'required|email',
             'password'=>'required',
         ]);
-
-        // check if user exists
-        // if(!Auth::attempt($request->only('email','password'))){
-        //     return response()->json([
-        //         'message'=>'Invalid login details',
-        //     ],401);
-        // }
 
         // get user
         $user = User::where('email',$request->email)->first();

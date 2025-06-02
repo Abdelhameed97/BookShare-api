@@ -18,6 +18,14 @@ class UserController extends Controller
     public function index()
     {
         //
+        // public function isAdmin(): bool
+        // {
+        //     return $this->role === 'admin';
+        // }
+        
+        if(!auth()->user()->isAdmin()){
+            return response()->json(['message' => 'You are not authorized to view users'], 403);
+        }        
         return UserResource::collection(User::all());
         // $user = User::all();
         // return response()->json(['users' => $user], 200);
@@ -31,6 +39,9 @@ class UserController extends Controller
     {
         //
         // The data is already validated by StoreUserRequest
+        if(!auth()->user()->isAdmin()){
+            return response()->json(['message' => 'You are not authorized to create users'], 403);
+        }
         $validatedData = $request->validated();
 
         // Create the user
@@ -38,10 +49,10 @@ class UserController extends Controller
             'name'     => $validatedData['name'],
             'email'    => $validatedData['email'],
             'password' => Hash::make($validatedData['password']),
-            'phone_number' => $request->phone_number ?? null,
-            'national_id'  => $request->national_id ?? null,
-            'id_image'     => $request->id_image ?? null,
-            'location'     => $request->location ?? null,
+            'phone_number' => $validatedData->phone_number,
+            'national_id'  => $validatedData->national_id,
+            'id_image'     => $validatedData->id_image ?? null,
+            'location'     => $validatedData->location ?? null,
         ]);
 
         // You can return response as JSON or redirect
@@ -56,9 +67,18 @@ class UserController extends Controller
      */
     public function show(string $id)
     {
-        //
-        $user= User::findorFail($id);
-        return response()->json(['user' => $user], 200);
+        
+        $user = User::find($id);
+        if(!$user){
+            return response()->json(['message' => 'User of id ' . $id . ' not found'], 404);
+        }
+        // admin can view specific user and user can view his own profile
+        if(!auth()->user()->isAdmin() && auth()->user()->id != $id){
+            return response()->json(['message' => 'You are not authorized to view users'], 403);
+        }
+        return new UserResource($user);
+
+        // return response()->json(['user' => $user], 200);
     }
 
     /**
@@ -67,12 +87,19 @@ class UserController extends Controller
     public function update(UpdateUserRequest $request, string $id)
     {
         //
-        $user = User::findorFail($id);
-
+        $user = User::find($id);
+        if(!$user){
+            return response()->json(['message' => 'User of id ' . $id . ' not found'], 404);
+        }
+        // admin can update any user and user can update his own profile
+       if(!auth()->user()->isAdmin() && auth()->user()->id != $id){
+            return response()->json(['message' => 'You are not authorized to update users'], 403);
+        }
         // The data is already validated by UpdateUserRequest
         $validatedData = $request->validated();
-        $user->update($request->all());
+        $user->update($validatedData);
         return $user;
+
         // return response()->json(['message' => 'User updated'], 200);
     }
 
@@ -81,9 +108,17 @@ class UserController extends Controller
      */
     public function destroy(string $id)
     {
-        //
-        $user = User::findorFail($id);
+        $user = User::find($id);
+        if(!$user){
+            return response()->json(['message' => 'User of id ' . $id . ' not found'], 404);
+        }
+        // admin can delete any user
+        if(!auth()->user()->isAdmin()){
+            return response()->json(['message' => 'You are not authorized to delete users'], 403);
+        }
+        
         $user->delete();
         return response()->json(['message' => 'User deleted'], 200);
+
     }
 }

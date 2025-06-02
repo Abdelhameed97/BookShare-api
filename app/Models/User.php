@@ -52,7 +52,32 @@ class User extends Authenticatable
         ];
     }
 
-    // 🧠 Relationships
+    // Relationships
+    
+    public function owner(): HasOne
+    {
+        return $this->hasOne(Owner::class);
+    }
+
+    public function client(): HasOne
+    {
+        return $this->hasOne(Client::class);
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    public function isOwner(): bool
+    {
+        return $this->role === 'owner';
+    }
+
+    public function isClient(): bool
+    {
+        return $this->role === 'client';
+    }
 
     // User can have many books
     public function books()
