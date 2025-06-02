@@ -18,7 +18,14 @@ class UserController extends Controller
     public function index()
     {
         //
-        $this->authorize('viewAny', User::class);
+        // public function isAdmin(): bool
+        // {
+        //     return $this->role === 'admin';
+        // }
+        
+        if(!auth()->user()->isAdmin()){
+            return response()->json(['message' => 'You are not authorized to view users'], 403);
+        }        
         return UserResource::collection(User::all());
         // $user = User::all();
         // return response()->json(['users' => $user], 200);
@@ -32,7 +39,9 @@ class UserController extends Controller
     {
         //
         // The data is already validated by StoreUserRequest
-        $this->authorize('create', User::class);
+        if(!auth()->user()->isAdmin()){
+            return response()->json(['message' => 'You are not authorized to create users'], 403);
+        }
         $validatedData = $request->validated();
 
         // Create the user
@@ -58,11 +67,15 @@ class UserController extends Controller
      */
     public function show(string $id)
     {
+        
         $user = User::find($id);
         if(!$user){
             return response()->json(['message' => 'User of id ' . $id . ' not found'], 404);
         }
-        $this->authorize('view', $user);
+        // admin can view specific user and user can view his own profile
+        if(!auth()->user()->isAdmin() && auth()->user()->id != $id){
+            return response()->json(['message' => 'You are not authorized to view users'], 403);
+        }
         return new UserResource($user);
 
         // return response()->json(['user' => $user], 200);
@@ -78,7 +91,11 @@ class UserController extends Controller
         if(!$user){
             return response()->json(['message' => 'User of id ' . $id . ' not found'], 404);
         }
-        $this->authorize('update', $user);
+        // admin can update any user and user can update his own profile
+       if(!auth()->user()->isAdmin() && auth()->user()->id != $id){
+            return response()->json(['message' => 'You are not authorized to update users'], 403);
+        }
+        // The data is already validated by UpdateUserRequest
         $validatedData = $request->validated();
         $user->update($validatedData);
         return $user;
@@ -95,7 +112,11 @@ class UserController extends Controller
         if(!$user){
             return response()->json(['message' => 'User of id ' . $id . ' not found'], 404);
         }
-        $this->authorize('delete', $user);
+        // admin can delete any user
+        if(!auth()->user()->isAdmin()){
+            return response()->json(['message' => 'You are not authorized to delete users'], 403);
+        }
+        
         $user->delete();
         return response()->json(['message' => 'User deleted'], 200);
 
