@@ -13,5 +13,12 @@ class Owner extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    // owner has many orders
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
 }
 
