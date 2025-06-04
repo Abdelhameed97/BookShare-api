@@ -13,4 +13,11 @@ class Client extends Model
     {
         return $this->belongsTo(User::class);
     }
+  
+    // Client.php
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
 }
