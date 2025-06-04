@@ -8,8 +8,10 @@ use App\Http\Controllers\BookController;
 
 use App\Http\Controllers\API\CategoryController;
 use App\Http\Controllers\API\CommentController;
+use App\Http\Controllers\API\OrderController;
 use App\Http\Controllers\API\RatingController;
 use App\Http\Controllers\API\WishlistController;
+use App\Http\Controllers\OrderItemController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -72,3 +74,10 @@ Route::apiResource('/category', CategoryController::class);
 
 // comment
 Route::apiResource('/comment', CommentController::class);
+
+// Order
+Route::apiResource('/order', OrderController
+::class);
+
+// Order Items
+Route::apiResource('/order-items', OrderItemController::class);
