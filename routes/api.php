@@ -10,6 +10,7 @@ use App\Http\Controllers\API\CategoryController;
 use App\Http\Controllers\API\CommentController;
 use App\Http\Controllers\API\RatingController;
 use App\Http\Controllers\API\WishlistController;
+use Illuminate\Support\Facades\Mail;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -72,3 +73,17 @@ Route::apiResource('/category', CategoryController::class);
 
 // comment
 Route::apiResource('/comment', CommentController::class);
+
+// Test route for email
+Route::get('/test-email', function () {
+    Mail::raw('BookShare 📚
+    email sent successfully from BookShare 📚
+time: ' . now() . '
+
+With best regards, team BookShare', function ($message) {
+        $message->to('wwwrehabkamal601@gmail.com')
+                ->subject('test email 🎉    - BookShare');
+    });
+    
+    return response()->json(['message' => 'Test email sent successfully! Check your inbox.']);
+});
