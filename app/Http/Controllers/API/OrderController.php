@@ -39,7 +39,33 @@ class OrderController extends Controller
         }
     }
 
+<<<<<<< HEAD
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+<<<<<<< HEAD
+{
+    $validated = $request->validate([
+        'owner_id' => 'required|exists:libraries,id',
+        'client_id' => 'required|exists:clients,id',
+        'book_id' => 'required|exists:books,id',
+        'quantity' => 'required|integer|min:1',
+        'total_price' => 'required|numeric|min:0',
+        'status' => 'in:pending,accepted,rejected,delivered',
+    ]);
+
+    $order = Order::create($validated);
+
+    // Get the library owner (assuming one-to-one relation with user)
+    $owner = Owner::where('owner_id', $validated['owner_id'])->first();
+
+    if ($owner && $owner->user) {
+        $owner->user->notify(new OrderPlacedNotification($order));
+=======
+=======
     public function store(StoreOrderRequest $request)
+>>>>>>> 7740b0b2eef64b24c7468e80b0660fe01d56f5dc
     {
         $user = Auth::user();
 
@@ -90,8 +116,18 @@ class OrderController extends Controller
             'message' => 'Order placed successfully.',
             'data' => $order->load('orderItems')
         ], 201);
+>>>>>>> 6c362b458afcec583aa6ffae9edb98881b6d123a
     }
 
+<<<<<<< HEAD
+    return response()->json(['message' => 'Order created and owner notified.'], 201);
+}
+
+    /**
+     * Display the specified resource.
+     */
+=======
+>>>>>>> 7740b0b2eef64b24c7468e80b0660fe01d56f5dc
     public function show(string $id)
     {
         try {

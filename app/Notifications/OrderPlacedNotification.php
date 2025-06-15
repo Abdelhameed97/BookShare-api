@@ -8,50 +8,40 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use App\Models\Order;
 
-class OrderPlacedNotification extends Notification
+class OrderPlacedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    /**
-     * Create a new notification instance.
-     */
-    protected $order;
+    public $order;
 
     public function __construct(Order $order)
     {
         $this->order = $order;
     }
-    /**
-     * Get the notification's delivery channels.
-     *
-     * @return array<int, string>
-     */
-    public function via(object $notifiable): array
+
+    public function via($notifiable)
     {
-        return ['mail'];
+        return ['mail', 'database']; // Save in DB + send email
     }
 
-    /**
-     * Get the mail representation of the notification.
-     */
-    public function toMail(object $notifiable): MailMessage
+    public function toMail($notifiable)
     {
         return (new MailMessage)
-            ->subject('New Order Received')
-            ->line('A new order has been placed by ' . $this->order->client->user->name)
-            ->action('View Order', url('/orders/' . $this->order->id))
-            ->line('Thank you for using our platform!');
+                    ->subject('New Order Received')
+                    ->greeting('Hello ' . $notifiable->name)
+                    ->line('A new order has been placed by a client '. $this->order->client->name)
+                    ->action('View Order', url('/orders/' . $this->order->id))
+                    ->line('Thank you for using our platform!');
     }
 
-    /**
-     * Get the array representation of the notification.
-     *
-     * @return array<string, mixed>
-     */
-    public function toArray(object $notifiable): array
+    public function toDatabase($notifiable)
     {
         return [
-            //
+            'order_id' => $this->order->id,
+            'client_id' => $this->order->client_id,
+            'book_id' => $this->order->book_id,
+            'message' => 'New order placed by client #' . $this->order->client_id,
+            'is_read' => false,
         ];
     }
 }

@@ -43,16 +43,17 @@ class UserController extends Controller
             return response()->json(['message' => 'You are not authorized to create users'], 403);
         }
         $validatedData = $request->validated();
-
+        
+        // dd($validatedData);
         // Create the user
         $user = User::create([
             'name'     => $validatedData['name'],
             'email'    => $validatedData['email'],
             'password' => Hash::make($validatedData['password']),
-            'phone_number' => $validatedData->phone_number,
-            'national_id'  => $validatedData->national_id,
-            'id_image'     => $validatedData->id_image ?? null,
-            'location'     => $validatedData->location ?? null,
+            'phone_number' => $validatedData['phone_number'],
+            'role'       => $validatedData['role'],
+            'national_id'  => $validatedData['national_id'],
+            'location'     => $validatedData['location'],
         ]);
 
         // You can return response as JSON or redirect
