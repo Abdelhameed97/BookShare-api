@@ -110,3 +110,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/cart', [CartController::class, 'store']);
     Route::delete('/cart/{id}', [CartController::class, 'destroy']);
 });
+
+// Order
+Route::apiResource('/order', OrderController::class);
+
+// Order Items
+Route::apiResource('/order-items', OrderItemController::class);
