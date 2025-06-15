@@ -10,6 +10,9 @@ use App\Http\Controllers\API\CategoryController;
 use App\Http\Controllers\API\CommentController;
 use App\Http\Controllers\API\RatingController;
 use App\Http\Controllers\API\WishlistController;
+use App\Notifications\TestEmailNotification;
+use App\Models\User;
+
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -30,7 +33,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
 });
 
 //category
-Route::apiResource('/category', \App\Http\Controllers\API\CategoryController::class);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('categories', CategoryController::class);
+});
+
 // comment
 Route::apiResource('/comment', \App\Http\Controllers\API\CommentController::class)->middleware('auth:sanctum');
 
@@ -72,3 +78,19 @@ Route::apiResource('/category', CategoryController::class);
 
 // comment
 Route::apiResource('/comment', CommentController::class);
+
+
+Route::get('/test-email', function () {
+    $user = User::find(1); // Replace with the user's ID you want to send the email to
+    $user->notify(new TestEmailNotification());
+    return "Email sent!";
+});
+
+Route::middleware('auth:sanctum')->get('/notifications', function (Request $request) {
+    return $request->user()->notifications;
+});
+
+// routes/api.php
+Route::middleware('auth:sanctum')->get('/me', function () {
+    return auth()->user();
+});

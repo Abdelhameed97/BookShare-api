@@ -24,20 +24,27 @@ class OrderController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-    {
-        $client = Client::where('user_id', auth()->id())->firstOrFail();
-        $owner = Owner::findOrFail($request->owner_id);
+{
+    $validated = $request->validate([
+        'owner_id' => 'required|exists:libraries,id',
+        'client_id' => 'required|exists:clients,id',
+        'book_id' => 'required|exists:books,id',
+        'quantity' => 'required|integer|min:1',
+        'total_price' => 'required|numeric|min:0',
+        'status' => 'in:pending,accepted,rejected,delivered',
+    ]);
 
-        $order = Order::create([
-            'client_id' => $client->id,
-            'owner_id' => $owner->id,
-            'status' => 'pending',
-        ]);
-        // send notification to owner
+    $order = Order::create($validated);
+
+    // Get the library owner (assuming one-to-one relation with user)
+    $owner = Owner::where('owner_id', $validated['owner_id'])->first();
+
+    if ($owner && $owner->user) {
         $owner->user->notify(new OrderPlacedNotification($order));
-
-        return response()->json($order, 201);
     }
+
+    return response()->json(['message' => 'Order created and owner notified.'], 201);
+}
 
     /**
      * Display the specified resource.
