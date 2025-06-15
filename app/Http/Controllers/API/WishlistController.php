@@ -38,6 +38,8 @@ class WishlistController extends Controller
 
             $wishlist = Wishlist::create($validatedData);
 
+            $wishlist->load(['user', 'book']);
+
             return response()->json(['success' => true, 'message' => 'Wishlist created successfully', 'data' => $wishlist], 201);
         } catch (ValidationException $ve) {
             return response()->json(['success' => false, 'message' => 'Validation errors', 'errors' => $ve->errors()], 422);
@@ -76,9 +78,9 @@ class WishlistController extends Controller
 
             $validatedData = $request->validated();
 
-            unset($validatedData['user_id']);
-
             $wishlist->update($validatedData);
+
+            unset($validatedData['user_id']);
 
             return response()->json(['success' => true, 'message' => 'Wishlist updated successfully', 'data' => $wishlist], 200);
         } catch (ModelNotFoundException $e) {
