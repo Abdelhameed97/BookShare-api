@@ -72,3 +72,10 @@ Route::apiResource('/category', CategoryController::class);
 
 // comment
 Route::apiResource('/comment', CommentController::class);
+
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/cart', [CartController::class, 'index']);
+    Route::post('/cart', [CartController::class, 'store']);
+    Route::delete('/cart/{id}', [CartController::class, 'destroy']);
+});
