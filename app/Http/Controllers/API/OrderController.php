@@ -6,19 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
 use Illuminate\Http\Request;
-use App\Models\Client;
-use App\Models\Owner;
 use App\Models\Order;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Auth;
+use App\Mail\OrderCreatedNotification;
 use App\Notifications\OrderPlacedNotification;
 use App\Notifications\OrderStatusUpdatedNotification;
-use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 
 class OrderController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         try {
@@ -28,14 +25,8 @@ class OrderController extends Controller
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
             }
 
-            $owner = $user->owner;
-
-            if (!$owner) {
-                return response()->json(['success' => false, 'message' => 'Only library owners can view orders'], 403);
-            }
-
-            $orders = Order::with(['orderItems.book', 'client.user', 'owner.user'])
-                ->where('owner_id', $owner->id)
+            $orders = Order::with(['orderItems.book', 'client', 'owner'])
+                ->where('owner_id', $user->id)
                 ->get();
 
             return response()->json(['success' => true, 'data' => $orders]);
@@ -48,9 +39,6 @@ class OrderController extends Controller
         }
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(StoreOrderRequest $request)
     {
         $user = Auth::user();
@@ -62,16 +50,8 @@ class OrderController extends Controller
             ], 401);
         }
 
-        $client = Client::where('user_id', $user->id)->first();
+        $owner = User::find($request->owner_id);
 
-        if (!$client) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Client not found',
-            ], 404);
-        }
-
-        $owner = Owner::find($request->owner_id);
         if (!$owner) {
             return response()->json([
                 'success' => false,
@@ -79,7 +59,13 @@ class OrderController extends Controller
             ], 404);
         }
 
-        $order = Order::create($request->validated());
+        $order = Order::create([
+            'client_id' => $user->id,
+            'owner_id' => $owner->id,
+            'quantity' => $request->quantity,
+            'status' => 'pending',
+            'total_price' => 0
+        ]);
 
         $totalPrice = 0;
 
@@ -95,9 +81,9 @@ class OrderController extends Controller
 
         $order->update(['total_price' => $totalPrice]);
 
-        if ($owner->user) {
-            $owner->user->notify(new OrderPlacedNotification($order));
-        }
+        $owner->notify(new OrderPlacedNotification($order));
+
+        Mail::to($owner->email)->send(new OrderCreatedNotification($order));
 
         return response()->json([
             'success' => true,
@@ -106,11 +92,6 @@ class OrderController extends Controller
         ], 201);
     }
 
-
-
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         try {
@@ -123,9 +104,9 @@ class OrderController extends Controller
                 ], 401);
             }
 
-            $order = Order::with(['client.user', 'owner.user', 'orderItems.book'])->findOrFail($id);
+            $order = Order::with(['client', 'owner', 'orderItems.book'])->findOrFail($id);
 
-            if ($user->id !== $order->client->user_id && !$user->is_admin) {
+            if ($user->id !== $order->client_id && !$user->is_admin) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Forbidden'
@@ -145,10 +126,6 @@ class OrderController extends Controller
         }
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-
     public function update(UpdateOrderRequest $request, string $id)
     {
         try {
@@ -158,9 +135,9 @@ class OrderController extends Controller
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
             }
 
-            $order = Order::with(['client.user', 'owner.user', 'orderItems.book'])->findOrFail($id);
+            $order = Order::with(['client', 'owner', 'orderItems.book'])->findOrFail($id);
 
-            if ($user->id !== $order->owner->user_id) {
+            if ($user->id !== $order->owner_id) {
                 return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
             }
 
@@ -168,12 +145,12 @@ class OrderController extends Controller
                 'status' => $request->status
             ]);
 
-            $order->client->user->notify(new OrderStatusUpdatedNotification($order));
+            $order->client->notify(new OrderStatusUpdatedNotification($order));
 
             return response()->json([
                 'success' => true,
                 'message' => 'Order status updated successfully.',
-                'data' => $order->fresh()->load('client.user', 'owner.user', 'orderItems.book')
+                'data' => $order->fresh()->load('client', 'owner', 'orderItems.book')
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -184,10 +161,6 @@ class OrderController extends Controller
         }
     }
 
-
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
         try {
@@ -197,9 +170,9 @@ class OrderController extends Controller
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
             }
 
-            $order = Order::with('owner.user')->findOrFail($id);
+            $order = Order::with('owner')->findOrFail($id);
 
-            if ($user->id !== $order->owner->user_id) {
+            if ($user->id !== $order->owner_id) {
                 return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
             }
 

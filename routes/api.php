@@ -11,6 +11,8 @@ use App\Http\Controllers\API\CommentController;
 use App\Http\Controllers\API\OrderController;
 use App\Http\Controllers\API\RatingController;
 use App\Http\Controllers\API\WishlistController;
+use Illuminate\Support\Facades\Mail;
+use App\Http\Controllers\API\CartController;
 use App\Http\Controllers\OrderItemController;
 
 Route::get('/user', function (Request $request) {
