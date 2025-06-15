@@ -12,7 +12,6 @@ use App\Http\Controllers\API\CommentController;
 use App\Http\Controllers\API\RatingController;
 use App\Http\Controllers\API\WishlistController;
 use Illuminate\Support\Facades\Mail;
-use App\Http\Controllers\API\CartController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
