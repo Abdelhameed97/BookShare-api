@@ -90,7 +90,8 @@ Route::middleware('auth:sanctum')->get('/notifications', function (Request $requ
     return $request->user()->notifications;
 });
 
-// routes/api.php
-Route::middleware('auth:sanctum')->get('/me', function () {
-    return auth()->user();
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/cart', [CartController::class, 'index']);
+    Route::post('/cart', [CartController::class, 'store']);
+    Route::delete('/cart/{id}', [CartController::class, 'destroy']);
 });
