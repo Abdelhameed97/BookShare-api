@@ -7,8 +7,10 @@ use Illuminate\Http\Request;
 use App\Models\Client;
 use App\Models\Owner;
 use App\Models\Order;
-use App\Notifications\OrderPlacedNotification;
-use App\Notifications\OrderStatusUpdatedNotification;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Auth;
+use App\Mail\OrderCreatedNotification;
+use App\Mail\OrderAcceptedNotification;
 
 class OrderController extends Controller
 {
@@ -24,6 +26,7 @@ class OrderController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
+<<<<<<< HEAD
 {
     $validated = $request->validate([
         'owner_id' => 'required|exists:libraries,id',
@@ -41,6 +44,29 @@ class OrderController extends Controller
 
     if ($owner && $owner->user) {
         $owner->user->notify(new OrderPlacedNotification($order));
+=======
+    {
+        $client = Client::where('user_id', Auth::id())->firstOrFail();
+        $owner = Owner::findOrFail($request->owner_id);
+
+        $order = Order::create([
+            'client_id' => $client->id,
+            'owner_id' => $owner->id,
+            'book_id' => $request->book_id,
+            'quantity' => $request->quantity,
+            'total_price' => $request->total_price,
+            'status' => 'pending',
+            'payment_method' => $request->payment_method ?? 'cash',
+        ]);
+
+        // Send email notification to the owner
+        Mail::to($owner->user->email)->send(new OrderCreatedNotification($order));
+
+        return response()->json([
+            'message' => 'Order created successfully and notification sent to owner',
+            'order' => $order
+        ], 201);
+>>>>>>> 6c362b458afcec583aa6ffae9edb98881b6d123a
     }
 
     return response()->json(['message' => 'Order created and owner notified.'], 201);
@@ -57,17 +83,25 @@ class OrderController extends Controller
     /**
      * Update the specified resource in storage.
      */
-  
     public function update(Request $request, Order $order)
     {
-        $order->update([
-            'status' => $request->status // accepted / rejected
+        $request->validate([
+            'status' => 'required|in:accepted,rejected,delivered'
         ]);
 
-        // send notification to client
-        $order->client->user->notify(new OrderStatusUpdatedNotification($order));
+        $order->update([
+            'status' => $request->status
+        ]);
 
-        return response()->json(['message' => 'Order status updated.']);
+        // Send email notification to the client if order is accepted
+        if ($request->status === 'accepted') {
+            Mail::to($order->client->user->email)->send(new OrderAcceptedNotification($order));
+        }
+
+        return response()->json([
+            'message' => 'Order status updated successfully',
+            'order' => $order
+        ]);
     }
     
 

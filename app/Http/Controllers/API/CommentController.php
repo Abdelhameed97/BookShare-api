@@ -48,10 +48,7 @@ class CommentController extends Controller
         ]);
        
 
-        // Update the comment with the validated data with mess comment update sucees
-        if ($comment->user_id !== auth()->comment->id()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
+      
         $comment->update($data);
         // Return the updated comment
         return response()->json($comment);

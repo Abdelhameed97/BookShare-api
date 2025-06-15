@@ -13,6 +13,8 @@ use App\Http\Controllers\API\WishlistController;
 use App\Notifications\TestEmailNotification;
 use App\Models\User;
 
+use Illuminate\Support\Facades\Mail;
+use App\Http\Controllers\API\CartController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -79,6 +81,19 @@ Route::apiResource('/category', CategoryController::class);
 // comment
 Route::apiResource('/comment', CommentController::class);
 
+// Test route for email
+Route::get('/test-email', function () {
+    Mail::raw('BookShare 📚
+    email sent successfully from BookShare 📚
+time: ' . now() . '
+
+With best regards, team BookShare', function ($message) {
+        $message->to('wwwrehabkamal601@gmail.com')
+                ->subject('test email 🎉    - BookShare');
+    });
+    
+    return response()->json(['message' => 'Test email sent successfully! Check your inbox.']);
+});
 
 Route::get('/test-email', function () {
     $user = User::find(1); // Replace with the user's ID you want to send the email to
