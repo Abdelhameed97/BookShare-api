@@ -10,9 +10,8 @@ use App\Http\Controllers\API\CategoryController;
 use App\Http\Controllers\API\CommentController;
 use App\Http\Controllers\API\RatingController;
 use App\Http\Controllers\API\WishlistController;
-use App\Notifications\TestEmailNotification;
 use App\Models\User;
-
+use App\Notifications\TestEmailNotification;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\API\CartController;
 use App\Http\Controllers\API\OrderController;
@@ -90,7 +89,7 @@ time: ' . now() . '
 
 With best regards, team BookShare', function ($message) {
         $message->to('wwwrehabkamal601@gmail.com')
-            ->subject('test email 🎉    - BookShare');
+                ->subject('test email 🎉    - BookShare');
     });
 
     return response()->json(['message' => 'Test email sent successfully! Check your inbox.']);
