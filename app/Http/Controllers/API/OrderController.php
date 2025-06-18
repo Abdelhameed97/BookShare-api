@@ -27,6 +27,7 @@ class OrderController extends Controller
 
             $orders = Order::with(['orderItems.book', 'client', 'owner'])
                 ->where('owner_id', $user->id)
+                ->orWhere('client_id', $user->id)
                 ->get();
 
             return response()->json(['success' => true, 'data' => $orders]);
@@ -39,95 +40,66 @@ class OrderController extends Controller
         }
     }
 
-<<<<<<< HEAD
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-<<<<<<< HEAD
-{
-    $validated = $request->validate([
-        'owner_id' => 'required|exists:libraries,id',
-        'client_id' => 'required|exists:clients,id',
-        'book_id' => 'required|exists:books,id',
-        'quantity' => 'required|integer|min:1',
-        'total_price' => 'required|numeric|min:0',
-        'status' => 'in:pending,accepted,rejected,delivered',
-    ]);
-
-    $order = Order::create($validated);
-
-    // Get the library owner (assuming one-to-one relation with user)
-    $owner = Owner::where('owner_id', $validated['owner_id'])->first();
-
-    if ($owner && $owner->user) {
-        $owner->user->notify(new OrderPlacedNotification($order));
-=======
-=======
     public function store(StoreOrderRequest $request)
->>>>>>> 7740b0b2eef64b24c7468e80b0660fe01d56f5dc
     {
-        $user = Auth::user();
+        try {
+            $user = Auth::user();
 
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized',
-            ], 401);
-        }
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized',
+                ], 401);
+            }
 
-        $owner = User::find($request->owner_id);
+            $owner = User::find($request->owner_id);
 
-        if (!$owner) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Owner not found',
-            ], 404);
-        }
+            if (!$owner) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Owner not found',
+                ], 404);
+            }
 
-        $order = Order::create([
-            'client_id' => $user->id,
-            'owner_id' => $owner->id,
-            'quantity' => $request->quantity,
-            'status' => 'pending',
-            'total_price' => 0
-        ]);
-
-        $totalPrice = 0;
-
-        foreach ($request->items as $item) {
-            $order->orderItems()->create([
-                'book_id' => $item['book_id'],
-                'quantity' => $item['quantity'],
-                'price' => $item['price'],
+            $order = Order::create([
+                'client_id' => $user->id,
+                'owner_id' => $owner->id,
+                'quantity' => array_sum(array_column($request->items, 'quantity')),
+                'status' => 'pending',
+                'total_price' => 0
             ]);
 
-            $totalPrice += $item['quantity'] * $item['price'];
+            $totalPrice = 0;
+
+            foreach ($request->items as $item) {
+                $order->orderItems()->create([
+                    'book_id' => $item['book_id'],
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'],
+                ]);
+
+                $totalPrice += $item['quantity'] * $item['price'];
+            }
+
+            $order->update(['total_price' => $totalPrice]);
+
+            $owner->notify(new OrderPlacedNotification($order));
+            Mail::to($owner->email)->send(new OrderCreatedNotification($order));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Order placed successfully.',
+                'data' => $order->load('orderItems')
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create order',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        $order->update(['total_price' => $totalPrice]);
-
-        $owner->notify(new OrderPlacedNotification($order));
-
-        Mail::to($owner->email)->send(new OrderCreatedNotification($order));
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Order placed successfully.',
-            'data' => $order->load('orderItems')
-        ], 201);
->>>>>>> 6c362b458afcec583aa6ffae9edb98881b6d123a
     }
 
-<<<<<<< HEAD
-    return response()->json(['message' => 'Order created and owner notified.'], 201);
-}
-
-    /**
-     * Display the specified resource.
-     */
-=======
->>>>>>> 7740b0b2eef64b24c7468e80b0660fe01d56f5dc
     public function show(string $id)
     {
         try {
@@ -142,7 +114,7 @@ class OrderController extends Controller
 
             $order = Order::with(['client', 'owner', 'orderItems.book'])->findOrFail($id);
 
-            if ($user->id !== $order->client_id && !$user->is_admin) {
+            if ($user->id !== $order->client_id && $user->id !== $order->owner_id && !$user->is_admin) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Forbidden'
@@ -173,7 +145,7 @@ class OrderController extends Controller
 
             $order = Order::with(['client', 'owner', 'orderItems.book'])->findOrFail($id);
 
-            if ($user->id !== $order->owner_id) {
+            if ($user->id !== $order->owner_id && !$user->is_admin) {
                 return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
             }
 
@@ -208,7 +180,7 @@ class OrderController extends Controller
 
             $order = Order::with('owner')->findOrFail($id);
 
-            if ($user->id !== $order->owner_id) {
+            if ($user->id !== $order->owner_id && !$user->is_admin) {
                 return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
             }
 

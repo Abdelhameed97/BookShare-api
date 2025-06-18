@@ -7,13 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model
 {
-    /** @use HasFactory<\Database\Factories\OrderFactory> */
     use HasFactory;
+
     protected $fillable = [
-        'client_id', 'owner_id',
+        'client_id',
+        'owner_id',
         'quantity',
         'total_price',
         'status',
+        'payment_method'
     ];
 
     public function client()
@@ -30,17 +32,4 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
-    public function orderStatus()
-    {
-        return $this->belongsTo(OrderStatus::class);
-    }
-    public function orderPayment()
-    {
-        return $this->belongsTo(OrderPayment::class);
-    }
-    public function orderNotification()
-    {
-        return $this->belongsTo(OrderNotification::class);
-    }
-
 }
