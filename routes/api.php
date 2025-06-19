@@ -90,7 +90,7 @@ With best regards, team BookShare', function ($message) {
         $message->to('wwwrehabkamal601@gmail.com')
                 ->subject('test email 🎉    - BookShare');
     });
-    
+
     return response()->json(['message' => 'Test email sent successfully! Check your inbox.']);
 });
 

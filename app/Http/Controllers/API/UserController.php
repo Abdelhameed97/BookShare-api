@@ -9,6 +9,8 @@ use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use App\Models\Client;
+use App\Models\Owner;
 
 class UserController extends Controller
 {
@@ -53,8 +55,21 @@ class UserController extends Controller
             'phone_number' => $validatedData['phone_number'],
             'role'       => $validatedData['role'],
             'national_id'  => $validatedData['national_id'],
-            'location'     => $validatedData['location'],
+            'location'     => $validatedData['location']?? null,
         ]);
+
+        if ($user->role === 'client') {
+            Client::create([
+                'user_id' => $user->id,
+                // other client-specific fields (optional)
+            ]);
+        } elseif ($user->role === 'owner') {
+            Owner::create([
+                'user_id' => $user->id,
+                // other owner-specific fields (optional)
+            ]);
+        }
+
 
         // You can return response as JSON or redirect
         return response()->json([
@@ -99,6 +114,19 @@ class UserController extends Controller
         // The data is already validated by UpdateUserRequest
         $validatedData = $request->validated();
         $user->update($validatedData);
+
+        if ($user->role === 'client') {
+            Client::update([
+                'user_id' => $user->id,
+                // other client-specific fields (optional)
+            ]);
+        } elseif ($user->role === 'owner') {
+            Owner::update([
+                'user_id' => $user->id,
+                // other owner-specific fields (optional)
+            ]);
+        }
+
         return $user;
 
         // return response()->json(['message' => 'User updated'], 200);
@@ -117,7 +145,18 @@ class UserController extends Controller
         if(!auth()->user()->isAdmin()){
             return response()->json(['message' => 'You are not authorized to delete users'], 403);
         }
-        
+        if ($user->role === 'client') {
+            Client::delete([
+                'user_id' => $user->id,
+                // other client-specific fields (optional)
+            ]);
+        } elseif ($user->role === 'owner') {
+            Owner::delete([
+                'user_id' => $user->id,
+                // other owner-specific fields (optional)
+            ]);
+        }
+
         $user->delete();
         return response()->json(['message' => 'User deleted'], 200);
 

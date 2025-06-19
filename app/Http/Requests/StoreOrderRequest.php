@@ -14,10 +14,11 @@ class StoreOrderRequest extends FormRequest
     public function rules()
     {
         return [
-            'client_id' => 'required|exists:clients,id',
-            'owner_id' => 'required|exists:owners,id',
-            'status' => 'sometimes|in:pending,accepted,rejected,delivered',
-            'payment_method' => 'sometimes|in:cash,card',
+            'owner_id' => 'required|exists:users,id,role,owner',
+            'items' => 'required|array',
+            'items.*.book_id' => 'required|exists:books,id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.price' => 'required|numeric|min:0',
         ];
     }
 }
