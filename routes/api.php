@@ -66,7 +66,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Book routes
 Route::get('/books', [BookController::class, 'index']);
-Route::get('/books/{id}', [BookController::class, 'show']);
+Route::get('/books/{book}', [BookController::class, 'show']);
 
 // Protected book routes (require authentication)
 Route::middleware('auth:sanctum')->group(function () {
