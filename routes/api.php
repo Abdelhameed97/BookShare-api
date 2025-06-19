@@ -55,13 +55,14 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // Wishlist
-Route::get('/wishlist', [WishlistController::class, 'index']);
-Route::get('/wishlist/{id}', [WishlistController::class, 'show']);
 // Protected wishlist routes (require authentication)
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/wishlist', [WishlistController::class, 'index']);
+    Route::get('/wishlist/{id}', [WishlistController::class, 'show']);
     Route::post('/wishlist', [WishlistController::class, 'store']);
     Route::put('/wishlist/{id}', [WishlistController::class, 'update']);
     Route::delete('/wishlist/{id}', [WishlistController::class, 'destroy']);
+    Route::post('/wishlist/move-all-to-cart', [WishlistController::class, 'moveAllToCart']);
 });
 
 // Book routes
@@ -89,7 +90,7 @@ time: ' . now() . '
 
 With best regards, team BookShare', function ($message) {
         $message->to('wwwrehabkamal601@gmail.com')
-                ->subject('test email 🎉    - BookShare');
+            ->subject('test email 🎉    - BookShare');
     });
 
     return response()->json(['message' => 'Test email sent successfully! Check your inbox.']);
@@ -112,7 +113,13 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // Order
-Route::apiResource('/order', OrderController::class);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('order', OrderController::class);
+});
 
 // Order Items
-Route::apiResource('/order-items', OrderItemController::class);
+Route::middleware('auth:sanctum')->group(
+    function () {
+        Route::apiResource('/order-items', OrderItemController::class);
+    }
+);

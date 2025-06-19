@@ -18,13 +18,16 @@ class AuthController extends Controller
     public function register(StoreUserRequest $request){
         // validate request
         $validated = $request->validated();
+        $validRoles = ['client', 'owner'];
+        $role = in_array($validated['role'] ?? null, $validRoles) ? $validated['role'] : 'client';
+
 
         // create user
         $user = User::create([
             'name'=>$validated['name'],
             'email'=>$validated['email'],
             'password'=>Hash::make($validated['password']),
-            'role'=>$validated['role']??'client', // default role is client
+            'role'=>$role, // default role is client
             'phone_number'=>$validated['phone_number']??null,
             'national_id'=>$validated['national_id']??null,
             'location'=>$validated['location']??null,
