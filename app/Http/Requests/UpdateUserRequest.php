@@ -3,37 +3,76 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+use App\Models\User;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class UpdateUserRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
+    protected $userToUpdate;
+
     public function authorize(): bool
     {
         return true;
     }
 
     /**
-     * Get the validation rules that apply to the request.
+     * Handle a failed validation attempt.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @param  \Illuminate\Contracts\Validation\Validator  $validator
+     * @return void
+     *
+     * @throws \Illuminate\Http\Exceptions\HttpResponseException
      */
+    
     public function rules(): array
     {
-        return [
-            //
-            'name'     => 'sometimes|required|string|max:255',
-            'email'    => 'sometimes|required|email|unique:users,email,' . $this->user,
-            'password' => 'sometimes|required|string|min:6|confirmed',
-            'role' => 'sometimes|string|max:255|in:admin,client,owner',
-            'phone_number' => 'sometimes|required|unique:users,phone_number|string|max:11|min:11',
-            'national_id' => 'sometimes|required|unique:users,national_id|string|max:14|min:14',
-            'location' => 'sometimes|required|string',
+        $user_id = $this->route('user'); // Assuming the user ID is passed in the route
 
-        ];
+        if (!User::find($user_id)) {
+        throw new \Illuminate\Http\Exceptions\HttpResponseException(
+            response()->json([
+                'message' => "User with ID {$user_id} not found."
+            ], 404)
+        );
     }
 
+        return [
+            'name'     => 'sometimes|required|string|max:255',
+
+            'email'    => [
+                'sometimes',
+                'required',
+                'email',
+                Rule::unique('users', 'email')->ignore($user_id),
+            ],
+
+            'password' => 'sometimes|required|string|min:6|confirmed',
+
+            'role'     => 'sometimes|string|max:255|in:admin,client,owner',
+
+            'phone_number' => [
+                'sometimes',
+                'required',
+                'string',
+                'min:11',
+                'max:11',
+                Rule::unique('users', 'phone_number')->ignore($user_id),
+            ],
+
+            'national_id' => [
+                'sometimes',
+                'required',
+                'string',
+                'min:14',
+                'max:14',
+                Rule::unique('users', 'national_id')->ignore($user_id),
+            ],
+
+            'location' => 'sometimes|required|string',
+        ];
+    }
 
     public function messages(): array
     {
