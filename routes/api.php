@@ -34,10 +34,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('user', UserController::class);
 });
 
-//category
+{/*//category
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('categories', CategoryController::class);
-});
+});*/ }
 
 // comment
 Route::apiResource('/comment', \App\Http\Controllers\API\CommentController::class)->middleware('auth:sanctum');

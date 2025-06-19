@@ -19,7 +19,7 @@ class CategoryController extends Controller
         // dd(auth()->user());
         // dd(auth()->user()->role);
         $this->authorize('viewAny', Category::class);
-        return response()->json(Category::all(), 200);
+    return response()->json(Category::with('books')->get(), 200);
     }
 
     public function store(Request $request)
@@ -42,10 +42,18 @@ class CategoryController extends Controller
 
     public function show($id)
     {
-        $category = Category::findOrFail($id);
+        $category = Category::with('books')->find($id);
+
+        if (!$category) {
+        return response()->json(['message' => 'Category not found'], 404);
+        }
+
         $this->authorize('view', $category);
-        return response()->json($category);
+
+         return response()->json($category);
     }
+
+    
 
     public function update(Request $request, $id)
     {
