@@ -29,7 +29,7 @@ class StoreUserRequest extends FormRequest
             'role' => 'string|max:255|in:admin,client,owner',
             'phone_number' => 'required|unique:users,phone_number|string|max:11|min:11',
             'national_id' => 'required|unique:users,national_id|string|max:14|min:14',
-            'location' => 'required|string',
+            'location' => 'nullable|string',
     
         ];
 
@@ -58,7 +58,6 @@ class StoreUserRequest extends FormRequest
             'national_id.string' => 'The national id must be a string.',
             'national_id.max' => 'The national id must not be greater than 14 characters.',
             'national_id.min' => 'The national id must not be less than 14 characters.',
-            'location.required' => 'The location field is required.',
         ];
     }
 }
