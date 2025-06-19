@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateUserRequest extends FormRequest
 {
@@ -21,18 +22,44 @@ class UpdateUserRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            //
-            'name'     => 'sometimes|required|string|max:255',
-            'email'    => 'sometimes|required|email|unique:users,email,' . $this->user,
-            'password' => 'sometimes|required|string|min:6|confirmed',
-            'role' => 'sometimes|string|max:255|in:admin,client,owner',
-            'phone_number' => 'sometimes|required|unique:users,phone_number|string|max:11|min:11',
-            'national_id' => 'sometimes|required|unique:users,national_id|string|max:14|min:14',
-            'location' => 'sometimes|required|string',
+        $user_id = $this->route('id'); // Get the user ID from the route
 
+        return [
+            'name'     => 'sometimes|required|string|max:255',
+
+            'email'    => [
+                'sometimes',
+                'required',
+                'email',
+                Rule::unique('users', 'email')->ignore($user_id),
+            ],
+
+            'password' => 'sometimes|required|string|min:6|confirmed',
+
+            'role'     => 'sometimes|string|max:255|in:admin,client,owner',
+
+            'phone_number' => [
+                'sometimes',
+                'required',
+                'string',
+                'min:11',
+                'max:11',
+                Rule::unique('users', 'phone_number')->ignore($user_id),
+            ],
+
+            'national_id' => [
+                'sometimes',
+                'required',
+                'string',
+                'min:14',
+                'max:14',
+                Rule::unique('users', 'national_id')->ignore($user_id),
+            ],
+
+            'location' => 'sometimes|required|string',
         ];
     }
+
 
 
     public function messages(): array

@@ -102,35 +102,41 @@ class UserController extends Controller
      */
     public function update(UpdateUserRequest $request, string $id)
     {
-        //
         $user = User::find($id);
-        if(!$user){
+
+        if (!$user) {
             return response()->json(['message' => 'User of id ' . $id . ' not found'], 404);
         }
+
         // admin can update any user and user can update his own profile
-       if(!auth()->user()->isAdmin() && auth()->user()->id != $id){
+        if (!auth()->user()->isAdmin() && auth()->user()->id != $user->id) {
             return response()->json(['message' => 'You are not authorized to update users'], 403);
         }
-        // The data is already validated by UpdateUserRequest
+
         $validatedData = $request->validated();
         $user->update($validatedData);
 
+        // Update related Client or Owner if needed
         if ($user->role === 'client') {
-            Client::update([
-                'user_id' => $user->id,
-                // other client-specific fields (optional)
-            ]);
+            $client = Client::where('user_id', $user->id)->first();
+            if (!$client) {
+                Client::create(['user_id' => $user->id]);
+            }
+            // else: optionally update client info if fields exist
         } elseif ($user->role === 'owner') {
-            Owner::update([
-                'user_id' => $user->id,
-                // other owner-specific fields (optional)
-            ]);
+            $owner = Owner::where('user_id', $user->id)->first();
+            if (!$owner) {
+                Owner::create(['user_id' => $user->id]);
+            }
+            // else: optionally update owner info if fields exist
         }
 
-        return $user;
-
-        // return response()->json(['message' => 'User updated'], 200);
+        return response()->json([
+            'message' => 'User updated successfully',
+            'user' => $user
+        ]);
     }
+
 
     /**
      * Remove the specified resource from storage.
