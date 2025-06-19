@@ -55,7 +55,7 @@ class UserController extends Controller
             'phone_number' => $validatedData['phone_number'],
             'role'       => $validatedData['role'],
             'national_id'  => $validatedData['national_id'],
-            'location'     => $validatedData['location'],
+            'location'     => $validatedData['location']?? null,
         ]);
 
         if ($user->role === 'client') {
