@@ -5,13 +5,16 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\BookController;
-use App\Http\Controllers\API\CartController;
 
 use App\Http\Controllers\API\CategoryController;
 use App\Http\Controllers\API\CommentController;
 use App\Http\Controllers\API\RatingController;
 use App\Http\Controllers\API\WishlistController;
+use App\Models\User;
+use App\Notifications\TestEmailNotification;
 use Illuminate\Support\Facades\Mail;
+use App\Http\Controllers\API\OrderController;
+use App\Http\Controllers\OrderItemController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -32,7 +35,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
 });
 
 //category
-Route::apiResource('/category', \App\Http\Controllers\API\CategoryController::class);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('categories', CategoryController::class);
+});
+
 // comment
 Route::apiResource('/comment', \App\Http\Controllers\API\CommentController::class)->middleware('auth:sanctum');
 
@@ -64,9 +70,8 @@ Route::get('/books/{id}', [BookController::class, 'show']);
 // Protected book routes (require authentication)
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/books', [BookController::class, 'store']);
-        Route::put('/books/{id}', [BookController::class, 'update']);
+    Route::put('/books/{id}', [BookController::class, 'update']);
     Route::delete('/books/{id}', [BookController::class, 'destroy']);
-
 });
 
 //category
@@ -89,9 +94,24 @@ With best regards, team BookShare', function ($message) {
     return response()->json(['message' => 'Test email sent successfully! Check your inbox.']);
 });
 
+Route::get('/test-email', function () {
+    $user = User::find(1); // Replace with the user's ID you want to send the email to
+    $user->notify(new TestEmailNotification());
+    return "Email sent!";
+});
+
+Route::middleware('auth:sanctum')->get('/notifications', function (Request $request) {
+    return $request->user()->notifications;
+});
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/cart', [CartController::class, 'index']);
     Route::post('/cart', [CartController::class, 'store']);
-    Route::put('/cart/{id}', [CartController::class, 'update']);
-    Route::delete('/cart/{id}', [CartController::class, 'destroy']); 
+    Route::delete('/cart/{id}', [CartController::class, 'destroy']);
 });
+
+// Order
+Route::apiResource('/order', OrderController::class);
+
+// Order Items
+Route::apiResource('/order-items', OrderItemController::class);

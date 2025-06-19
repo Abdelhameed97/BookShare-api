@@ -18,13 +18,14 @@ class Order extends Model
 
     public function client()
     {
-        return $this->belongsTo(Client::class);
+        return $this->belongsTo(User::class, 'client_id');
     }
 
     public function owner()
     {
-        return $this->belongsTo(Owner::class);
+        return $this->belongsTo(User::class, 'owner_id');
     }
+
     public function orderItems()
     {
         return $this->hasMany(OrderItem::class);

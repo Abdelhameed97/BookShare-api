@@ -3,90 +3,227 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreOrderRequest;
+use App\Http\Requests\UpdateOrderRequest;
 use Illuminate\Http\Request;
-use App\Models\Client;
-use App\Models\Owner;
 use App\Models\Order;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
 use App\Mail\OrderCreatedNotification;
-use App\Mail\OrderAcceptedNotification;
+use App\Notifications\OrderPlacedNotification;
+use App\Notifications\OrderStatusUpdatedNotification;
+use App\Models\User;
 
 class OrderController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        try {
+            $user = Auth::user();
+
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+            }
+
+            $orders = Order::with(['orderItems.book', 'client', 'owner'])
+                ->where('owner_id', $user->id)
+                ->get();
+
+            return response()->json(['success' => true, 'data' => $orders]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch orders',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
+<<<<<<< HEAD
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
+<<<<<<< HEAD
+{
+    $validated = $request->validate([
+        'owner_id' => 'required|exists:libraries,id',
+        'client_id' => 'required|exists:clients,id',
+        'book_id' => 'required|exists:books,id',
+        'quantity' => 'required|integer|min:1',
+        'total_price' => 'required|numeric|min:0',
+        'status' => 'in:pending,accepted,rejected,delivered',
+    ]);
+
+    $order = Order::create($validated);
+
+    // Get the library owner (assuming one-to-one relation with user)
+    $owner = Owner::where('owner_id', $validated['owner_id'])->first();
+
+    if ($owner && $owner->user) {
+        $owner->user->notify(new OrderPlacedNotification($order));
+=======
+=======
+    public function store(StoreOrderRequest $request)
+>>>>>>> 7740b0b2eef64b24c7468e80b0660fe01d56f5dc
     {
-        $client = Client::where('user_id', Auth::id())->firstOrFail();
-        $owner = Owner::findOrFail($request->owner_id);
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized',
+            ], 401);
+        }
+
+        $owner = User::find($request->owner_id);
+
+        if (!$owner) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Owner not found',
+            ], 404);
+        }
 
         $order = Order::create([
-            'client_id' => $client->id,
+            'client_id' => $user->id,
             'owner_id' => $owner->id,
-            'book_id' => $request->book_id,
             'quantity' => $request->quantity,
-            'total_price' => $request->total_price,
             'status' => 'pending',
-            'payment_method' => $request->payment_method ?? 'cash',
+            'total_price' => 0
         ]);
 
-        // Send email notification to the owner
-        Mail::to($owner->user->email)->send(new OrderCreatedNotification($order));
+        $totalPrice = 0;
+
+        foreach ($request->items as $item) {
+            $order->orderItems()->create([
+                'book_id' => $item['book_id'],
+                'quantity' => $item['quantity'],
+                'price' => $item['price'],
+            ]);
+
+            $totalPrice += $item['quantity'] * $item['price'];
+        }
+
+        $order->update(['total_price' => $totalPrice]);
+
+        $owner->notify(new OrderPlacedNotification($order));
+
+        Mail::to($owner->email)->send(new OrderCreatedNotification($order));
 
         return response()->json([
-            'message' => 'Order created successfully and notification sent to owner',
-            'order' => $order
+            'success' => true,
+            'message' => 'Order placed successfully.',
+            'data' => $order->load('orderItems')
         ], 201);
+>>>>>>> 6c362b458afcec583aa6ffae9edb98881b6d123a
     }
+
+<<<<<<< HEAD
+    return response()->json(['message' => 'Order created and owner notified.'], 201);
+}
 
     /**
      * Display the specified resource.
      */
+=======
+>>>>>>> 7740b0b2eef64b24c7468e80b0660fe01d56f5dc
     public function show(string $id)
     {
-        //
-    }
+        try {
+            $user = Auth::user();
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Order $order)
-    {
-        $request->validate([
-            'status' => 'required|in:accepted,rejected,delivered'
-        ]);
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized'
+                ], 401);
+            }
 
-        $order->update([
-            'status' => $request->status
-        ]);
+            $order = Order::with(['client', 'owner', 'orderItems.book'])->findOrFail($id);
 
-        // Send email notification to the client if order is accepted
-        if ($request->status === 'accepted') {
-            Mail::to($order->client->user->email)->send(new OrderAcceptedNotification($order));
+            if ($user->id !== $order->client_id && !$user->is_admin) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Forbidden'
+                ], 403);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $order
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch order',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        return response()->json([
-            'message' => 'Order status updated successfully',
-            'order' => $order
-        ]);
     }
-    
 
-    /**
-     * Remove the specified resource from storage.
-     */
+    public function update(UpdateOrderRequest $request, string $id)
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+            }
+
+            $order = Order::with(['client', 'owner', 'orderItems.book'])->findOrFail($id);
+
+            if ($user->id !== $order->owner_id) {
+                return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
+            }
+
+            $order->update([
+                'status' => $request->status
+            ]);
+
+            $order->client->notify(new OrderStatusUpdatedNotification($order));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Order status updated successfully.',
+                'data' => $order->fresh()->load('client', 'owner', 'orderItems.book')
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update order.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function destroy(string $id)
     {
-        //
+        try {
+            $user = Auth::user();
+
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+            }
+
+            $order = Order::with('owner')->findOrFail($id);
+
+            if ($user->id !== $order->owner_id) {
+                return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
+            }
+
+            $order->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Order deleted successfully.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete order.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

@@ -24,6 +24,7 @@ class RatingController extends Controller
     {
         try {
             $rating = Rating::create($request->validated());
+            $rating->load(['reviewer', 'reviewedUser', 'book']);
             return response()->json(['success' => true, 'message' => 'Rating created successfully', 'data' => $rating], 201);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Failed to create rating', 'error' => $e->getMessage()], 500);
@@ -65,6 +66,8 @@ class RatingController extends Controller
             }
 
             $rating->update($request->validated());
+
+            $rating->load(['reviewer', 'reviewedUser', 'book']);
 
             return response()->json(['success' => true, 'message' => 'Rating updated successfully', 'data' => $rating]);
         } catch (\Exception $e) {
