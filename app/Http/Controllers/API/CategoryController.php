@@ -15,9 +15,9 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        if (!auth()->user()->isAdmin()) {
-            return response()->json(['message' => 'You are not authorized to view categories'], 403);
-        }
+        // if (!auth()->user()->isAdmin()) {
+        //     return response()->json(['message' => 'You are not authorized to view categories'], 403);
+        // }
 
         return response()->json([
             'categories' => Category::all()

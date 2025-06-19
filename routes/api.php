@@ -45,7 +45,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // comment
-Route::apiResource('/comment', ommentController::class)->middleware('auth:sanctum');
+Route::apiResource('/comment', commentController::class)->middleware('auth:sanctum');
 
 
 // Ratings
