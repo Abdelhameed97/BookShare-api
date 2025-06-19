@@ -62,6 +62,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/wishlist', [WishlistController::class, 'store']);
     Route::put('/wishlist/{id}', [WishlistController::class, 'update']);
     Route::delete('/wishlist/{id}', [WishlistController::class, 'destroy']);
+    Route::post('/wishlist/move-all-to-cart', [WishlistController::class, 'moveAllToCart']);
 });
 
 // Book routes
