@@ -53,7 +53,7 @@ class User extends Authenticatable
     }
 
     // Relationships
-    
+
     public function owner(): HasOne
     {
         return $this->hasOne(Owner::class);

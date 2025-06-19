@@ -4,11 +4,14 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreWishlistRequest;
+use App\Models\Cart;
 use App\Models\Wishlist;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+
 
 class WishlistController extends Controller
 {
@@ -122,6 +125,46 @@ class WishlistController extends Controller
             return response()->json(['success' => false, 'message' => 'Wishlist not found'], 404);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Failed to delete wishlist', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function moveAllToCart(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            $wishlistItems = Wishlist::where('user_id', $user->id)->with('book')->get();
+            $movedCount = 0;
+
+            foreach ($wishlistItems as $item) {
+                if ($item->book && $item->book->status === 'available') {
+                    $exists = DB::table('carts')->where([
+                        ['user_id', '=', $user->id],
+                        ['book_id', '=', $item->book_id],
+                    ])->exists();
+
+                    if (!$exists) {
+                        Cart::create([
+                            'user_id' => $user->id,
+                            'book_id' => $item->book_id,
+                            'quantity' => 1,
+                        ]);
+
+                        $item->delete();
+                        $movedCount++;
+                    }
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'moved_items_count' => $movedCount
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Server error while moving items to cart',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 }
