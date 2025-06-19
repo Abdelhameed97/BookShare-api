@@ -17,15 +17,29 @@ class WishlistController extends Controller
         try {
             $user = Auth::user();
 
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthenticated',
+                    'error' => 'User not authenticated'
+                ], 401);
+            }
+
             if ($user->is_admin) {
-                $wishlists = Wishlist::with(relations: ['user', 'book'])->get();
+                $wishlists = Wishlist::with(['user', 'book'])->get();
             } else {
-                $wishlists = Wishlist::with(['user', 'book'])->where('user_id', $user->id)->get();
+                $wishlists = Wishlist::with(['user', 'book'])
+                    ->where('user_id', $user->id)
+                    ->get();
             }
 
             return response()->json(['success' => true, 'data' => $wishlists], 200);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to fetch wishlists', 'error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch wishlists',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
