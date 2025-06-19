@@ -40,6 +40,8 @@ class UserController extends Controller
     public function store(StoreUserRequest $request)
     {
         //
+            dd(auth()->user()); // ⬅️ Debugging line to check the authenticated user
+
         // The data is already validated by StoreUserRequest
         if(!auth()->user()->isAdmin()){
             return response()->json(['message' => 'You are not authorized to create users'], 403);
@@ -102,69 +104,103 @@ class UserController extends Controller
      */
     public function update(UpdateUserRequest $request, string $id)
     {
-        $user = User::find($id);
-
-        if (!$user) {
-            return response()->json(['message' => 'User of id ' . $id . ' not found'], 404);
+        // 1. Check if user exists
+        try {
+        $user = User::findOrFail($id);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['message' => "User of id {$id} not found."], 404);
         }
 
-        // admin can update any user and user can update his own profile
-        if (!auth()->user()->isAdmin() && auth()->user()->id != $user->id) {
-            return response()->json(['message' => 'You are not authorized to update users'], 403);
+    
+        // 2. Check authorization
+        if (!auth()->user()->isAdmin() && auth()->user()->id != $id) {
+            return response()->json([
+                'message' => 'You are not authorized to update this user.'
+            ], 403);
         }
+        // 3. Check if role is changing
+        $oldRole = $user->role;
 
+        // 4. Get validated data and update
         $validatedData = $request->validated();
         $user->update($validatedData);
 
-        // Update related Client or Owner if needed
-        if ($user->role === 'client') {
-            $client = Client::where('user_id', $user->id)->first();
-            if (!$client) {
-                Client::create(['user_id' => $user->id]);
-            }
-            // else: optionally update client info if fields exist
-        } elseif ($user->role === 'owner') {
-            $owner = Owner::where('user_id', $user->id)->first();
-            if (!$owner) {
-                Owner::create(['user_id' => $user->id]);
-            }
-            // else: optionally update owner info if fields exist
-        }
+        // 5. Sync related models
+        $this->syncRelatedRoleModels($user, $oldRole);
 
+        // 6. Return updated user
         return response()->json([
-            'message' => 'User updated successfully',
-            'user' => $user
+            'message' => 'User updated successfully.',
+            'data' => $user
         ]);
     }
 
+    /**
+     * Sync Client or Owner model based on user's role.
+     */
+    private function syncRelatedRoleModels(User $user, string $oldRole): void
+    {
+
+        // If role changed from client to owner
+        if ($oldRole === 'client' && $user->role !== 'client') {
+            Client::where('user_id', $user->id)->delete();
+        }
+
+        // If role changed from owner to client
+        if ($oldRole === 'owner' && $user->role !== 'owner') {
+            Owner::where('user_id', $user->id)->delete();
+        }
+        // If role is client, ensure Client model exists
+        if ($user->role === 'client') {
+            Client::updateOrCreate(
+                ['user_id' => $user->id],
+                ['profile_picture' => null, 'preferences' => null] // optional fields
+            );
+        }
+
+        // If role is owner, ensure Owner model exists
+        if ($user->role === 'owner') {
+            Owner::updateOrCreate(
+                ['user_id' => $user->id],
+                ['library_name' => $user->name . "'s Library"] // example field
+            );
+        }
+    }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+   public function destroy(string $id)
     {
+        // 1. Check if user exists
         $user = User::find($id);
-        if(!$user){
-            return response()->json(['message' => 'User of id ' . $id . ' not found'], 404);
+        if (!$user) {
+            return response()->json([
+                'message' => "User of id {$id} not found"
+            ], 404);
         }
-        // admin can delete any user
-        if(!auth()->user()->isAdmin()){
-            return response()->json(['message' => 'You are not authorized to delete users'], 403);
+
+        // 2. Authorization check
+        if (!auth()->user()->isAdmin()) {
+            return response()->json([
+                'message' => 'You are not authorized to delete users'
+            ], 403);
         }
+
+        // 3. Delete related records
         if ($user->role === 'client') {
-            Client::delete([
-                'user_id' => $user->id,
-                // other client-specific fields (optional)
-            ]);
+            Client::where('user_id', $user->id)->delete();
         } elseif ($user->role === 'owner') {
-            Owner::delete([
-                'user_id' => $user->id,
-                // other owner-specific fields (optional)
-            ]);
+            Owner::where('user_id', $user->id)->delete();
         }
 
+        // 4. Delete the user
         $user->delete();
-        return response()->json(['message' => 'User deleted'], 200);
 
+        // 5. Return response
+        return response()->json([
+            'message' => 'User deleted successfully'
+        ], 200);
     }
+
 }

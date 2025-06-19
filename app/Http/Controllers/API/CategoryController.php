@@ -1,85 +1,109 @@
 <?php
 
 namespace App\Http\Controllers\API;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Policy;
+
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\User;
 use App\Models\Category;
-
+use App\Http\Requests\StoreCategoryRequest;
+use App\Http\Requests\UpdateCategoryRequest;
 
 class CategoryController extends Controller
 {
+    /**
+     * Display a listing of the categories.
+     */
     public function index()
     {
-        // dd(auth()->user());
-        // dd(auth()->user()->role);
-        $this->authorize('viewAny', Category::class);
-        return response()->json(Category::all(), 200);
+        if (!auth()->user()->isAdmin()) {
+            return response()->json(['message' => 'You are not authorized to view categories'], 403);
+        }
+
+        return response()->json([
+            'categories' => Category::all()
+        ], 200);
     }
 
-    public function store(Request $request)
-    {
+    /**
+     * Store a newly created category.
+     */
+    public function store(StoreCategoryRequest $request)
+    {        
 
-        // $this->authorize('create', Category::class);
+        // Check if the user is an admin
+        // This assumes you have a method isAdmin() in your User model
+        if (!auth()->user()->isAdmin()) {
+            return response()->json(['message' => 'You are not authorized to create categories'], 403);
+        }
 
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'type' => 'required|string|max:255',
-        ]);
+        $validatedData = $request->validated();
 
         $category = Category::create([
-            'name' => $request->name,
-            'type' => $request->type,
+            'name' => $validatedData['name'],
+            'type' => $validatedData['type'] ?? 'general', // Default to 'general' if not provided
         ]);
 
-        return response()->json($category, 201);
+        return response()->json([
+            'message' => 'Category created successfully.',
+            'category' => $category,
+        ], 201);
     }
 
-    public function show($id)
-    {
-        $category = Category::findOrFail($id);
-        $this->authorize('view', $category);
-        return response()->json($category);
-    }
-
-    public function update(Request $request, $id)
+    /**
+     * Display the specified category.
+     */
+    public function show(string $id)
     {
         $category = Category::find($id);
+
         if (!$category) {
-            return response()->json(['message' => 'Category not found'], 404);
+            return response()->json(['message' => "Category of id {$id} not found"], 404);
         }
 
-        $this->authorize('update', $category);
-
-        $request->validate([
-            'name' => 'sometimes|required|string|max:255',
-            'type' => 'sometimes|required|string|max:255',
-        ]);
-
-        $category->update([
-            'name' => $request->name,
-            'type' => $request->type,
-        ]);
-
-        return response()->json($category);
+        return response()->json(['category' => $category], 200);
     }
 
-    public function destroy($id)
+    /**
+     * Update the specified category.
+     */
+    public function update(UpdateCategoryRequest $request, string $id)
     {
-
         $category = Category::find($id);
+
         if (!$category) {
-            return response()->json(['message' => 'Category not found'], 404);
+            return response()->json(['message' => "Category of id {$id} not found"], 404);
         }
-        // $this->authorize('delete',  $category);
+
+        if (!auth()->user()->isAdmin()) {
+            return response()->json(['message' => 'You are not authorized to update categories'], 403);
+        }
+
+        $validatedData = $request->validated();
+        $category->update($validatedData);
+
+        return response()->json([
+            'message' => 'Category updated successfully.',
+            'category' => $category,
+        ], 200);
+    }
+
+    /**
+     * Remove the specified category.
+     */
+    public function destroy(string $id)
+    {
+        $category = Category::find($id);
+
+        if (!$category) {
+            return response()->json(['message' => "Category of id {$id} not found"], 404);
+        }
+
+        if (!auth()->user()->isAdmin()) {
+            return response()->json(['message' => 'You are not authorized to delete categories'], 403);
+        }
+
         $category->delete();
 
-        return response()->json(['message' => 'Deleted successfully']);
+        return response()->json(['message' => 'Category deleted successfully'], 200);
     }
-
 }

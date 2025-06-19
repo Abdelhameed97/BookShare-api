@@ -4,25 +4,39 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use App\Models\User;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class UpdateUserRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
+    protected $userToUpdate;
+
     public function authorize(): bool
     {
         return true;
     }
 
     /**
-     * Get the validation rules that apply to the request.
+     * Handle a failed validation attempt.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @param  \Illuminate\Contracts\Validation\Validator  $validator
+     * @return void
+     *
+     * @throws \Illuminate\Http\Exceptions\HttpResponseException
      */
+    
     public function rules(): array
     {
-        $user_id = $this->route('id'); // Get the user ID from the route
+        $user_id = $this->route('user'); // Assuming the user ID is passed in the route
+
+        if (!User::find($user_id)) {
+        throw new \Illuminate\Http\Exceptions\HttpResponseException(
+            response()->json([
+                'message' => "User with ID {$user_id} not found."
+            ], 404)
+        );
+    }
 
         return [
             'name'     => 'sometimes|required|string|max:255',
@@ -59,8 +73,6 @@ class UpdateUserRequest extends FormRequest
             'location' => 'sometimes|required|string',
         ];
     }
-
-
 
     public function messages(): array
     {
