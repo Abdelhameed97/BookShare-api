@@ -6,6 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRatingRequest;
 use App\Http\Requests\UpdateRatingRequest;
 use App\Models\Rating;
+use App\Models\Book;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
 
 class RatingController extends Controller
@@ -22,14 +26,50 @@ class RatingController extends Controller
 
     public function store(StoreRatingRequest $request)
     {
-        try {
-            $rating = Rating::create($request->validated());
-            $rating->load(['reviewer', 'reviewedUser', 'book']);
-            return response()->json(['success' => true, 'message' => 'Rating created successfully', 'data' => $rating], 201);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to create rating', 'error' => $e->getMessage()], 500);
+        $userId = Auth::id(); // Get current user ID
+        $book = Book::find($request->book_id);
+
+        if (!$book) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Book not found.'
+            ], 404);
         }
+
+        if ($book->user_id === $userId) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You cannot rate your own book.'
+            ], 403);
+        }
+
+        // Check for duplicate rating
+        $alreadyRated = Rating::where('book_id', $book->id)
+                            ->where('reviewer_id', $userId)
+                            ->exists();
+
+        if ($alreadyRated) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You have already rated this book.'
+            ], 409);
+        }
+
+        $rating = Rating::create([
+            'book_id' => $book->id,
+            'reviewer_id' => $userId,
+            'reviewed_user_id' => $book->user_id,
+            'rating' => $request->rating,
+            'comment' => $request->comment,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Rating added successfully.',
+            'data' => $rating
+        ], 201);
     }
+
 
     public function show(string $id)
     {
