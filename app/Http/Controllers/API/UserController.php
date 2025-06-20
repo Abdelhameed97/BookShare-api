@@ -40,7 +40,7 @@ class UserController extends Controller
     public function store(StoreUserRequest $request)
     {
         //
-            dd(auth()->user()); // ⬅️ Debugging line to check the authenticated user
+            // dd(auth()->user()); // ⬅️ Debugging line to check the authenticated user
 
         // The data is already validated by StoreUserRequest
         if(!auth()->user()->isAdmin()){

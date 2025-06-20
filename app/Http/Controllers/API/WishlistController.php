@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\Book;
 
 
 class WishlistController extends Controller
@@ -45,25 +46,56 @@ class WishlistController extends Controller
             ], 500);
         }
     }
-
-    public function store(StoreWishlistRequest $request)
+    /**
+     * Store a newly created resource in storage.
+     */
+    // ✅ إضافة كتاب إلى الويشليست
+    // ✅ تحقق من أن المستخدم ليس هو صاحب الكتاب
+    // ✅ تحقق من عدم وجود الكتاب بالفعل في الويشليست
+    // ✅ إنشاء الويشليست
+    // ✅ إرجاع رسالة نجاح مع بيانات الويشليست
+    public function store(Request $request)
     {
-        try {
-            $validatedData = $request->validated();
+        $request->validate([
+            'book_id' => 'required|exists:books,id',
+        ]);
 
-            $validatedData['user_id'] = Auth::id();
+        $userId = Auth::id();
+        $book = Book::find($request->book_id);
 
-            $wishlist = Wishlist::create($validatedData);
-
-            $wishlist->load(['user', 'book']);
-
-            return response()->json(['success' => true, 'message' => 'Wishlist created successfully', 'data' => $wishlist], 201);
-        } catch (ValidationException $ve) {
-            return response()->json(['success' => false, 'message' => 'Validation errors', 'errors' => $ve->errors()], 422);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to create wishlist', 'error' => $e->getMessage()], 500);
+        // ✅ تحقق إن المستخدم مش هو نفسه صاحب الكتاب
+        if ($book->user_id == $userId) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You cannot add your own book to your wishlist.'
+            ], 403);
         }
+
+        // ✅ تحقق من عدم التكرار
+        $exists = Wishlist::where('user_id', $userId)
+                        ->where('book_id', $book->id)
+                        ->exists();
+
+        if ($exists) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Book already in your wishlist.'
+            ], 409);
+        }
+
+        // ✅ إنشاء الويشليست
+        $wishlist = Wishlist::create([
+            'user_id' => $userId,
+            'book_id' => $book->id,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Book added to wishlist.',
+            'data' => $wishlist
+        ], 201);
     }
+
 
     public function show(string $id)
     {
