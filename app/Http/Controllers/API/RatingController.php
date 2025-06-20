@@ -125,21 +125,40 @@ class RatingController extends Controller
     {
         try {
             $user = Auth::user();
+
             if (!$user) {
-                return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized'
+                ], 401);
             }
 
             $rating = Rating::findOrFail($id);
 
-            if ($user->id !== $rating->reviewer_id && !$user->is_admin) {
-                return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
+            // تحقق إن المستخدم هو صاحب التقييم أو أدمن
+            $isAdmin = $user->role === 'admin';
+            $isReviewer = $user->id === $rating->reviewer_id;
+
+            if (!$isAdmin && !$isReviewer) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Forbidden: You are not allowed to delete this rating.'
+                ], 403);
             }
 
             $rating->delete();
 
-            return response()->json(['success' => true, 'message' => 'Rating deleted successfully']);
+            return response()->json([
+                'success' => true,
+                'message' => 'Rating deleted successfully.'
+            ]);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to delete rating', 'error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete rating.',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
+
 }
