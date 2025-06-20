@@ -91,29 +91,35 @@ class RatingController extends Controller
         }
     }
 
-    public function update(UpdateRatingRequest $request, string $id)
+    public function update(UpdateRatingRequest $request, $id)
     {
-        try {
-            $user = Auth::user();
-            if (!$user) {
-                return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
-            }
+        $rating = Rating::find($id);
 
-            $rating = Rating::findOrFail($id);
-
-            if ($user->id !== $rating->reviewer_id && !$user->is_admin) {
-                return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
-            }
-
-            $rating->update($request->validated());
-
-            $rating->load(['reviewer', 'reviewedUser', 'book']);
-
-            return response()->json(['success' => true, 'message' => 'Rating updated successfully', 'data' => $rating]);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to update rating', 'error' => $e->getMessage()], 500);
+        if (!$rating) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Rating not found.'
+            ], 404);
         }
+
+        // Check if the authenticated user is the reviewer or an admin
+        $user = auth()->user();
+        if ($user->id !== $rating->reviewer_id && $user->role !== 'admin') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized'
+            ], 403);
+        }
+
+        $rating->update($request->only(['rating', 'comment']));
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Rating updated successfully.',
+            'data' => $rating->fresh(['book', 'reviewer', 'reviewedUser']),
+        ]);
     }
+
 
     public function destroy(string $id)
     {
