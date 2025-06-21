@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Models\Client;
 use App\Models\Owner;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class UserController extends Controller
 {
@@ -118,11 +119,23 @@ class UserController extends Controller
                 'message' => 'You are not authorized to update this user.'
             ], 403);
         }
+        
         // 3. Check if role is changing
         $oldRole = $user->role;
 
         // 4. Get validated data and update
         $validatedData = $request->validated();
+        
+        // Handle password update if provided
+        if (isset($validatedData['password'])) {
+            // Hash the new password
+            $validatedData['password'] = Hash::make($validatedData['password']);
+            
+            // Remove fields that shouldn't be stored in database
+            unset($validatedData['password_confirmation']);
+            unset($validatedData['current_password']);
+        }
+        
         $user->update($validatedData);
 
         // 5. Sync related models
@@ -140,7 +153,6 @@ class UserController extends Controller
      */
     private function syncRelatedRoleModels(User $user, string $oldRole): void
     {
-
         // If role changed from client to owner
         if ($oldRole === 'client' && $user->role !== 'client') {
             Client::where('user_id', $user->id)->delete();
@@ -150,6 +162,7 @@ class UserController extends Controller
         if ($oldRole === 'owner' && $user->role !== 'owner') {
             Owner::where('user_id', $user->id)->delete();
         }
+        
         // If role is client, ensure Client model exists
         if ($user->role === 'client') {
             Client::updateOrCreate(
