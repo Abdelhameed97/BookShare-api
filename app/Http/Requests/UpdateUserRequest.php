@@ -7,6 +7,7 @@ use Illuminate\Validation\Rule;
 use App\Models\User;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Support\Facades\Hash;
 
 class UpdateUserRequest extends FormRequest
 {
@@ -49,6 +50,17 @@ class UpdateUserRequest extends FormRequest
             ],
 
             'password' => 'sometimes|required|string|min:6|confirmed',
+            'current_password' => [
+                'sometimes',
+                'required_with:password',
+                'string',
+                function ($attribute, $value, $fail) use ($user_id) {
+                    $user = User::find($user_id);
+                    if ($user && !Hash::check($value, $user->password)) {
+                        $fail('The current password is incorrect.');
+                    }
+                }
+            ],
 
             'role'     => 'sometimes|string|max:255|in:admin,client,owner',
 
