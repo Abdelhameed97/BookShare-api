@@ -48,7 +48,6 @@ class OrderPlacedNotification extends Notification implements ShouldQueue
             'order_id' => $this->order->id,
             'client_id' => $this->order->client_id,
             'message' => 'New order placed by client #' . $this->order->client_id . ' for books: ' . $bookTitles,
-            'is_read' => false,
         ];
     }
 

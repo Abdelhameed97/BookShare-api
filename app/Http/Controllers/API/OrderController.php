@@ -6,15 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use App\Models\User;
 use App\Models\Book;
 use App\Models\Order;
+use App\Models\OrderItem;
+
 
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
 use App\Mail\OrderCreatedNotification;
 use App\Notifications\OrderPlacedNotification;
 use App\Notifications\OrderStatusUpdatedNotification;
+
 
 
 class OrderController extends Controller
@@ -28,10 +32,28 @@ class OrderController extends Controller
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
             }
 
-            $orders = Order::with(['orderItems.book', 'client', 'owner'])
-                ->where('owner_id', $user->id)
-                ->orWhere('client_id', $user->id)
-                ->get();
+            $ordersQuery = Order::with([
+                'orderItems.book:id,title,price',
+                'client:id,name',
+                'owner:id,name'
+            ])->select('id', 'status', 'total_price', 'client_id', 'owner_id', 'created_at');
+
+            // بناء على نوع المستخدم، فلتر الأوردرات
+            if ($user->role === 'admin') {
+                // لا يوجد فلترة
+            } elseif ($user->role === 'owner') {
+                $ordersQuery->where('owner_id', $user->id);
+            } elseif ($user->role === 'client') {
+                $ordersQuery->where('client_id', $user->id);
+            } else {
+                return response()->json(['success' => false, 'message' => 'Unauthorized role'], 403);
+            }
+
+            $orders = $ordersQuery->latest()->get();
+
+            if ($orders->isEmpty()) {
+                return response()->json(['success' => false, 'message' => 'No orders found'], 404);
+            }
 
             return response()->json(['success' => true, 'data' => $orders]);
         } catch (\Exception $e) {
@@ -42,6 +64,7 @@ class OrderController extends Controller
             ], 500);
         }
     }
+
 
     public function store(StoreOrderRequest $request)
     {
@@ -220,4 +243,57 @@ class OrderController extends Controller
             ], 500);
         }
     }
+
+    // ownerOrders method to get all orders for the owner
+    public function ownerOrders(Request $request)
+    {
+        $owner = $request->user();
+
+        $orders = Order::with('orderItems.book', 'client')
+            ->where('owner_id', $owner->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $orders,
+        ]);
+
+    }
+
+
+    // // Accept and reject order methods
+    public function accept(Order $order, Request $request)
+    {
+        // Check if the authenticated user is the owner of the order
+        if (Gate::denies('update', $order)) {
+            return response()->json(['success' => false, 'message' => 'You do not own this order.'], 403);
+        }
+
+        $order->status = 'accepted';
+        $order->save();
+
+        $order->load('client', 'orderItems.book');
+        $order->client->notify(new OrderStatusUpdatedNotification($order, 'accepted'));
+
+        return response()->json(['success' => true, 'message' => 'Order accepted']);
+    }
+
+    public function reject(Order $order, Request $request)
+    {
+        // Check if the authenticated user is the owner of the order
+        if (Gate::denies('update', $order)) {
+            return response()->json(['success' => false, 'message' => 'You do not own this order.'], 403);
+        }
+
+        $order->status = 'rejected';
+        $order->save();
+
+        $order->load('client', 'orderItems.book');
+        $order->client->notify(new OrderStatusUpdatedNotification($order, 'rejected'));
+
+        return response()->json(['success' => true, 'message' => 'Order rejected']);
+    }
+
+
 }
