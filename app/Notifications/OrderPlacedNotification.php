@@ -7,6 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use App\Models\Order;
+use App\Models\OrderItem;
 
 class OrderPlacedNotification extends Notification implements ShouldQueue
 {
@@ -36,12 +37,19 @@ class OrderPlacedNotification extends Notification implements ShouldQueue
 
     public function toDatabase($notifiable)
     {
+        \Log::info('OrderPlacedNotification toDatabase executed', [
+            'order_id' => $this->order->id,
+            'client_id' => $this->order->client_id,
+        ]);
+
+        $bookTitles = $this->order->orderItems->pluck('book.title')->implode(', ');
+
         return [
             'order_id' => $this->order->id,
             'client_id' => $this->order->client_id,
-            'book_id' => $this->order->book_id,
-            'message' => 'New order placed by client #' . $this->order->client_id,
+            'message' => 'New order placed by client #' . $this->order->client_id . ' for books: ' . $bookTitles,
             'is_read' => false,
         ];
     }
+
 }

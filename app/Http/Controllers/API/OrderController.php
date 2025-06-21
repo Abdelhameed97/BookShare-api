@@ -6,13 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
 use Illuminate\Http\Request;
+use App\Models\User;
+use App\Models\Book;
 use App\Models\Order;
+
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
 use App\Mail\OrderCreatedNotification;
 use App\Notifications\OrderPlacedNotification;
 use App\Notifications\OrderStatusUpdatedNotification;
-use App\Models\User;
+
 
 class OrderController extends Controller
 {
@@ -52,53 +55,72 @@ class OrderController extends Controller
                 ], 401);
             }
 
-            $owner = User::find($request->owner_id);
+            $groupedItems = [];
 
-            if (!$owner) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Owner not found',
-                ], 404);
-            }
-
-            $order = Order::create([
-                'client_id' => $user->id,
-                'owner_id' => $owner->id,
-                'quantity' => array_sum(array_column($request->items, 'quantity')),
-                'status' => 'pending',
-                'total_price' => 0
-            ]);
-
-            $totalPrice = 0;
-
+            // Group items by owner
             foreach ($request->items as $item) {
-                $order->orderItems()->create([
-                    'book_id' => $item['book_id'],
+                $book = Book::findOrFail($item['book_id']);
+                $ownerId = $book->user_id;
+
+                if (!isset($groupedItems[$ownerId])) {
+                    $groupedItems[$ownerId] = [];
+                }
+
+                $groupedItems[$ownerId][] = [
+                    'book_id' => $book->id,
                     'quantity' => $item['quantity'],
                     'price' => $item['price'],
-                ]);
-
-                $totalPrice += $item['quantity'] * $item['price'];
+                ];
             }
 
-            $order->update(['total_price' => $totalPrice]);
+            $orders = [];
 
-            $owner->notify(new OrderPlacedNotification($order));
-            Mail::to($owner->email)->send(new OrderCreatedNotification($order));
+            foreach ($groupedItems as $ownerId => $items) {
+                $totalPrice = 0;
+                $quantity = 0;
+
+                foreach ($items as $item) {
+                    $totalPrice += $item['price'] * $item['quantity'];
+                    $quantity += $item['quantity'];
+                }
+
+                $order = Order::create([
+                    'client_id' => $user->id,
+                    'owner_id' => $ownerId,
+                    'total_price' => $totalPrice,
+                    'status' => 'pending'
+                ]);
+
+                foreach ($items as $item) {
+                    $order->orderItems()->create($item);
+                }
+
+                // Notify the owner
+                $owner = User::find($ownerId);
+                if ($owner) {
+                    $order->load('orderItems.book', 'client');
+                    $owner->notify(new OrderPlacedNotification($order));
+                    $order->load('client', 'owner');
+                    Mail::to($owner->email)->send(new OrderCreatedNotification($order));
+                }
+
+                $orders[] = $order->load('orderItems.book');
+            }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Order placed successfully.',
-                'data' => $order->load('orderItems')
+                'message' => 'Orders placed successfully.',
+                'data' => $orders
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create order',
+                'message' => 'Failed to create orders',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
+
 
     public function show(string $id)
     {
