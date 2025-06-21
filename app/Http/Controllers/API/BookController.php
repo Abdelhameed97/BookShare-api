@@ -14,64 +14,64 @@ class BookController extends Controller
      * Display a listing of books with optional search filters.
      */
     public function index(Request $request)
-    {
-        $query = Book::with(['user', 'category', 'comments', 'ratings']);
+{
+    $query = Book::with(['user', 'category', 'comments', 'ratings']);
 
-        $filters = [];
+    $filters = [];
 
-        if ($request->has('title')) {
-            $query->where('title', 'like', '%' . $request->title . '%');
-            $filters[] = 'title';
-        }
-        if ($request->has('user_id')) {
-            $query->where('user_id', $request->user_id);
-            $filters[] = 'user_id';
-        }
-        if ($request->has('category_id')) {
-            $query->where('category_id', $request->category_id);
-            $filters[] = 'category_id';
-        }
-        if ($request->has('min_price')) {
-            $query->where('price', '>=', $request->min_price);
-            $filters[] = 'min_price';
-        }
-        if ($request->has('max_price')) {
-            $query->where('price', '<=', $request->max_price);
-            $filters[] = 'max_price';
-        }
-        if ($request->has('status')) {
-            $query->where('status', $request->status);
-            $filters[] = 'status';
-        }
+    if ($request->has('title')) {
+        $query->where('title', 'like', '%' . $request->title . '%');
+        $filters[] = 'title';
+    }
+    if ($request->has('user_id')) {
+        $query->where('user_id', $request->user_id);
+        $filters[] = 'user_id';
+    }
+    if ($request->has('category_id')) {
+        $query->where('category_id', $request->category_id);
+        $filters[] = 'category_id';
+    }
+    if ($request->has('min_price')) {
+        $query->where('price', '>=', $request->min_price);
+        $filters[] = 'min_price';
+    }
+    if ($request->has('max_price')) {
+        $query->where('price', '<=', $request->max_price);
+        $filters[] = 'max_price';
+    }
+    if ($request->has('status')) {
+        $query->where('status', $request->status);
+        $filters[] = 'status';
+    }
 
         $books = $query->orderBy('created_at', 'desc')->get();
 
-        if ($books->isEmpty()) {
-            $message = 'No books found.';
+    if ($books->isEmpty()) {
+        $message = 'No books found.';
 
-            if (in_array('title', $filters)) {
-                $message='no books found with this title.';
-            } elseif (in_array('user_id', $filters)) {
-                $message = 'No books found for this user.';
-            } elseif (in_array('category_id', $filters)) {
-                $message = 'No books found in this category.';
-            } elseif (in_array('min_price', $filters) || in_array('max_price', $filters)) {
-                $message = 'No books found in this price range.';
-            } elseif (in_array('status', $filters)) {
-                $message = 'No books found with this status.';
-            }
-
-            return response()->json([
-                'status' => 'error',
-                'message' => $message
-            ], 404);
+        if (in_array('title', $filters)) {
+            $message='no books found with this title.';
+        } elseif (in_array('user_id', $filters)) {
+            $message = 'No books found for this user.';
+        } elseif (in_array('category_id', $filters)) {
+            $message = 'No books found in this category.';
+        } elseif (in_array('min_price', $filters) || in_array('max_price', $filters)) {
+            $message = 'No books found in this price range.';
+        } elseif (in_array('status', $filters)) {
+            $message = 'No books found with this status.';
         }
 
         return response()->json([
-            'status' => 'success',
-            'data' => $books
-        ]);
+            'status' => 'error',
+            'message' => $message
+        ], 404);
     }
+
+    return response()->json([
+        'status' => 'success',
+        'data' => $books
+    ]);
+}
 
      
 
@@ -119,7 +119,7 @@ class BookController extends Controller
             $imagesPaths[] = $request->input('image');
         }
 
-        $book->images = $imagesPaths;
+            $book->images = $imagesPaths;
         $book->save();
 
         return response()->json([
