@@ -34,7 +34,6 @@ class CategoryController extends Controller
         }
 
         $validatedData = $request->validated();
-
         $category = Category::create([
             'name' => $validatedData['name'],
             'type' => $validatedData['type'] ?? 'general',
