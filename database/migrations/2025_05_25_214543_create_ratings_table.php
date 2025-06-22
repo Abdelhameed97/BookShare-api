@@ -14,18 +14,18 @@ return new class extends Migration
         Schema::create('ratings', function (Blueprint $table) {
             $table->id();
             $table->foreignId('book_id')->constrained()->onDelete('cascade');
-            
+
             // reviewer: the person writing the review
             $table->foreignId('reviewer_id')
                 ->constrained('users')
                 ->onDelete('cascade');
-            
+
             // reviewed user: the owner of the book or the person being reviewed
             $table->foreignId('reviewed_user_id')
                 ->constrained('users')
                 ->onDelete('cascade');
 
-            $table->unsignedTinyInteger('rating'); // example: 1–5
+            $table->float('rating'); // example: 1–5
             $table->text('comment')->nullable();
             $table->timestamps();
         });

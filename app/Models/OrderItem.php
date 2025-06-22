@@ -17,7 +17,7 @@ class OrderItem extends Model
         'order_id',
         'book_id',
         'quantity',
-        'price',
+        'type'
     ];
 
     public function order()
@@ -36,6 +36,6 @@ class OrderItem extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
     //
-    
+
 
 }

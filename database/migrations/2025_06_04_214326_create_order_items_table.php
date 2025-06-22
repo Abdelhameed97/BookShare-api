@@ -12,8 +12,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_id')->constrained()->onDelete('cascade');
             $table->foreignId('book_id')->constrained()->onDelete('cascade');
+            $table->enum('type', ['buy', 'rent'])->default('buy');
             $table->integer('quantity')->default(1);
-            $table->decimal('price', 10, 2);
             $table->timestamps();
         });
     }

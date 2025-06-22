@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
@@ -12,7 +13,6 @@ use App\Models\Book;
 use App\Models\Order;
 use App\Models\OrderItem;
 
-
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
 use App\Mail\OrderCreatedNotification;
@@ -21,33 +21,27 @@ use App\Mail\OrderAcceptedNotification;
 use App\Notifications\OrderPlacedNotification;
 use App\Notifications\OrderStatusUpdatedNotification;
 
-
-
 class OrderController extends Controller
 {
     public function index()
     {
         try {
             $user = Auth::user();
-
             if (!$user) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
             }
 
             $ordersQuery = Order::with([
-                'orderItems.book:id,title,price',
+                'orderItems.book:id,title,price,rental_price',
                 'client:id,name',
                 'owner:id,name'
             ])->select('id', 'status', 'total_price', 'client_id', 'owner_id', 'created_at');
 
-            // بناء على نوع المستخدم، فلتر الأوردرات
-            if ($user->role === 'admin') {
-                // لا يوجد فلترة
-            } elseif ($user->role === 'owner') {
+            if ($user->role === 'owner') {
                 $ordersQuery->where('owner_id', $user->id);
             } elseif ($user->role === 'client') {
                 $ordersQuery->where('client_id', $user->id);
-            } else {
+            } elseif ($user->role !== 'admin') {
                 return response()->json(['success' => false, 'message' => 'Unauthorized role'], 403);
             }
 
@@ -67,25 +61,23 @@ class OrderController extends Controller
         }
     }
 
-
     public function store(StoreOrderRequest $request)
     {
+        DB::beginTransaction();
+
         try {
             $user = Auth::user();
-
             if (!$user) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthorized',
-                ], 401);
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
             }
 
             $groupedItems = [];
 
-            // Group items by owner
             foreach ($request->items as $item) {
                 $book = Book::findOrFail($item['book_id']);
+                $type = $item['type'] ?? 'buy';
                 $ownerId = $book->user_id;
+                $unitPrice = $type === 'rent' ? $book->rental_price : $book->price;
 
                 if (!isset($groupedItems[$ownerId])) {
                     $groupedItems[$ownerId] = [];
@@ -94,7 +86,8 @@ class OrderController extends Controller
                 $groupedItems[$ownerId][] = [
                     'book_id' => $book->id,
                     'quantity' => $item['quantity'],
-                    'price' => $item['price'],
+                    'type' => $type,
+                    'unit_price' => $unitPrice
                 ];
             }
 
@@ -102,35 +95,53 @@ class OrderController extends Controller
 
             foreach ($groupedItems as $ownerId => $items) {
                 $totalPrice = 0;
-                $quantity = 0;
+                $totalQuantity = 0;
 
                 foreach ($items as $item) {
-                    $totalPrice += $item['price'] * $item['quantity'];
-                    $quantity += $item['quantity'];
+                    $totalPrice += $item['unit_price'] * $item['quantity'];
+                    $totalQuantity += $item['quantity'];
                 }
 
                 $order = Order::create([
                     'client_id' => $user->id,
                     'owner_id' => $ownerId,
                     'total_price' => $totalPrice,
+                    'quantity' => $totalQuantity,
                     'status' => 'pending'
                 ]);
 
                 foreach ($items as $item) {
-                    $order->orderItems()->create($item);
+                    $book = Book::findOrFail($item['book_id']);
+
+                    if ($book->quantity < $item['quantity']) {
+                        DB::rollBack();
+                        return response()->json([
+                            'success' => false,
+                            'message' => "Book '{$book->title}' has only {$book->quantity} copies left."
+                        ], 400);
+                    }
+
+                    $book->quantity -= $item['quantity'];
+                    $book->save();
+
+                    $order->orderItems()->create([
+                        'book_id' => $book->id,
+                        'quantity' => $item['quantity'],
+                        'type' => $item['type'],
+                    ]);
                 }
 
-                // Notify the owner
                 $owner = User::find($ownerId);
                 if ($owner) {
                     $order->load('orderItems.book', 'client');
                     $owner->notify(new OrderPlacedNotification($order));
-                    $order->load('client', 'owner');
                     Mail::to($owner->email)->send(new OrderCreatedNotification($order));
                 }
 
                 $orders[] = $order->load('orderItems.book');
             }
+
+            DB::commit();
 
             return response()->json([
                 'success' => true,
@@ -138,6 +149,7 @@ class OrderController extends Controller
                 'data' => $orders
             ], 201);
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create orders',
@@ -146,32 +158,21 @@ class OrderController extends Controller
         }
     }
 
-
     public function show(string $id)
     {
         try {
             $user = Auth::user();
-
             if (!$user) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthorized'
-                ], 401);
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
             }
 
             $order = Order::with(['client', 'owner', 'orderItems.book'])->findOrFail($id);
 
             if ($user->id !== $order->client_id && $user->id !== $order->owner_id && !$user->is_admin) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Forbidden'
-                ], 403);
+                return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
             }
 
-            return response()->json([
-                'success' => true,
-                'data' => $order
-            ]);
+            return response()->json(['success' => true, 'data' => $order]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -185,7 +186,6 @@ class OrderController extends Controller
     {
         try {
             $user = Auth::user();
-
             if (!$user) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
             }
@@ -196,9 +196,7 @@ class OrderController extends Controller
                 return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
             }
 
-            $order->update([
-                'status' => $request->status
-            ]);
+            $order->update(['status' => $request->status]);
 
             $order->client->notify(new OrderStatusUpdatedNotification($order));
 
@@ -220,24 +218,39 @@ class OrderController extends Controller
     {
         try {
             $user = Auth::user();
-
             if (!$user) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
             }
 
-            $order = Order::with('owner')->findOrFail($id);
+            $order = Order::with('orderItems.book')->findOrFail($id);
 
-            if ($user->id !== $order->owner_id && !$user->is_admin) {
+            if ($user->id !== $order->client_id && !$user->is_admin) {
                 return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
             }
 
+            DB::beginTransaction();
+
+            if ($order->status === 'pending') {
+                foreach ($order->orderItems as $item) {
+                    if ($item->book) {
+                        $item->book->quantity += $item->quantity;
+                        $item->book->save();
+                    }
+                }
+            }
+
+            $order->orderItems()->delete();
             $order->delete();
+
+            DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Order deleted successfully.'
+                'message' => 'Order deleted successfully and stock restored if applicable.'
             ]);
         } catch (\Exception $e) {
+            DB::rollBack();
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete order.',
@@ -246,7 +259,6 @@ class OrderController extends Controller
         }
     }
 
-    // ownerOrders method to get all orders for the owner
     public function ownerOrders(Request $request)
     {
         $owner = $request->user();
@@ -260,14 +272,10 @@ class OrderController extends Controller
             'success' => true,
             'data' => $orders,
         ]);
-
     }
 
-
-    // // Accept and reject order methods
     public function accept(Order $order, Request $request)
     {
-        // Check if the authenticated user is the owner of the order
         if (Gate::denies('update', $order)) {
             return response()->json(['success' => false, 'message' => 'You do not own this order.'], 403);
         }
@@ -283,7 +291,6 @@ class OrderController extends Controller
 
     public function reject(Order $order, Request $request)
     {
-        // Check if the authenticated user is the owner of the order
         if (Gate::denies('update', $order)) {
             return response()->json(['success' => false, 'message' => 'You do not own this order.'], 403);
         }
@@ -296,6 +303,4 @@ class OrderController extends Controller
 
         return response()->json(['success' => true, 'message' => 'Order rejected']);
     }
-
-
 }
