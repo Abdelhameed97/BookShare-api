@@ -7,6 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use App\Models\Order;
+use App\Models\OrderItem;
 
 class OrderPlacedNotification extends Notification implements ShouldQueue
 {
@@ -27,21 +28,28 @@ class OrderPlacedNotification extends Notification implements ShouldQueue
     public function toMail($notifiable)
     {
         return (new MailMessage)
-                    ->subject('New Order Received')
-                    ->greeting('Hello ' . $notifiable->name)
-                    ->line('A new order has been placed by a client '. $this->order->client->name)
-                    ->action('View Order', url('/orders/' . $this->order->id))
-                    ->line('Thank you for using our platform!');
+            ->subject('New Order Received')
+            ->greeting('Hello ' . $notifiable->name)
+            ->line('A new order has been placed on one of your books.')
+            ->line('Book: ' . $this->order->orderItems->first()->book->title)
+            ->action('View Orders', url('/orders')) // لو عندك واجهة
+            ->line('Thank you for using our application!');
     }
 
     public function toDatabase($notifiable)
     {
+        \Log::info('OrderPlacedNotification toDatabase executed', [
+            'order_id' => $this->order->id,
+            'client_id' => $this->order->client_id,
+        ]);
+
+        $bookTitles = $this->order->orderItems->pluck('book.title')->implode(', ');
+
         return [
             'order_id' => $this->order->id,
             'client_id' => $this->order->client_id,
-            'book_id' => $this->order->book_id,
-            'message' => 'New order placed by client #' . $this->order->client_id,
-            'is_read' => false,
+            'message' => 'New order placed by client #' . $this->order->client_id . ' for books: ' . $bookTitles,
         ];
     }
+
 }

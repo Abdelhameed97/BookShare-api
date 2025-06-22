@@ -13,9 +13,12 @@ class NotificationController extends Controller
      */
     public function index()
     {
-        //
+        $notifications = Auth::user()->notifications; // OR ->unreadNotifications
+        return response()->json([
+            'success' => true,
+            'data' => $notifications,
+        ]);
     }
-
     /**
      * Store a newly created resource in storage.
      */

@@ -7,52 +7,46 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use App\Models\Order;
+use App\Models\OrderItem;
+// App\Notifications\OrderStatusUpdatedNotification.php
+
+
 
 class OrderStatusUpdatedNotification extends Notification
 {
     use Queueable;
 
-    /**
-     * Create a new notification instance.
-     */
-    protected $order;
+    public $order;
+    public $status;
 
-    public function __construct(Order $order)
+    public function __construct($order, $status)
     {
         $this->order = $order;
-    }
-    /**
-     * Get the notification's delivery channels.
-     *
-     * @return array<int, string>
-     */
-    public function via(object $notifiable): array
-    {
-        return ['mail'];
+        $this->status = $status;
     }
 
-    /**
-     * Get the mail representation of the notification.
-     */
-    public function toMail(object $notifiable): MailMessage
+    public function via($notifiable)
     {
-        $status = ucfirst($this->order->status);
+        return ['mail', 'database']; // Save in DB + send email
+    }
+
+    public function toMail($notifiable)
+    {
         return (new MailMessage)
-            ->subject("Order $status")
-            ->line("Your order has been $status by the library owner.")
-            ->action('View Order', url('/orders/' . $this->order->id))
-            ->line('Thank you for using our platform!');
+            ->subject('Your Order Has Been ' . ucfirst($this->status))
+            ->greeting('Hello ' . $notifiable->name)
+            ->line("Your order has been {$this->status}.")
+            ->line('Book: ' . $this->order->orderItems->first()->book->title)
+            ->action('View Orders', url('/orders'))
+            ->line('Thank you for using our service!');
     }
 
-    /**
-     * Get the array representation of the notification.
-     *
-     * @return array<string, mixed>
-     */
-    public function toArray(object $notifiable): array
+    public function toArray($notifiable)
     {
         return [
-            //
+            'order_id' => $this->order->id,
+            'status' => $this->status,
+            'message' => "Your order #{$this->order->id} has been {$this->status}.",
         ];
     }
 }

@@ -90,7 +90,8 @@ class BookController extends Controller
             'educational_level' => 'nullable|string',
             'genre' => 'nullable|string',
             'status' => 'required|in:available,rented,sold',
-            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'quantity' => 'required|integer|min:1',
         ]);
 
         if ($validator->fails()) {
@@ -178,7 +179,8 @@ class BookController extends Controller
         'educational_level' => 'nullable|string',
         'genre' => 'nullable|string',
         'status' => 'sometimes|in:available,rented,sold',
-        'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+        'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        'quantity' => 'sometimes|integer|min:1',
     ]);
 
     if ($validator->fails()) {
