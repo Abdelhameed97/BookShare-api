@@ -44,6 +44,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('categories', CategoryController::class);
 });
 
+// Public route to get libraries (owners only)
+Route::get('/libraries', function () {
+    $owners = User::where('role', 'owner')->get();
+    return response()->json([
+        'success' => true,
+        'data' => $owners
+    ]);
+});
+
 // comment
 Route::apiResource('/comment', commentController::class)->middleware('auth:sanctum');
 
