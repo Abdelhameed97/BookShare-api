@@ -3,10 +3,7 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Content;
-use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use App\Models\Order;
 
@@ -15,28 +12,27 @@ class OrderAcceptedNotification extends Mailable
     use Queueable, SerializesModels;
 
     public $order;
+    public $client;
+    public $owner;
+    public $book;
 
     public function __construct(Order $order)
     {
         $this->order = $order;
+        $this->client = $order->client;
+        $this->owner = $order->owner;
+        $this->book = $order->order_items[0]->book ?? null; // تأكد من وجود book
     }
 
-    public function envelope(): Envelope
+    public function build()
     {
-        return new Envelope(
-            subject: 'Your Order Has Been Accepted',
-        );
+        return $this->subject('Your Order Has Been Accepted')
+            ->view('emails.order_accepted')
+            ->with([
+                'order' => $this->order,
+                'client' => $this->client,
+                'owner' => $this->owner,
+                'book' => $this->book,
+            ]);
     }
-
-    public function content(): Content
-    {
-        return new Content(
-            view: 'emails.order_accepted',
-        );
-    }
-
-    public function attachments(): array
-    {
-        return [];
-    }
-} 
+}

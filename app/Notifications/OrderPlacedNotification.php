@@ -28,11 +28,12 @@ class OrderPlacedNotification extends Notification implements ShouldQueue
     public function toMail($notifiable)
     {
         return (new MailMessage)
-                    ->subject('New Order Received')
-                    ->greeting('Hello ' . $notifiable->name)
-                    ->line('A new order has been placed by a client '. $this->order->client->name)
-                    ->action('View Order', url('/orders/' . $this->order->id))
-                    ->line('Thank you for using our platform!');
+            ->subject('New Order Received')
+            ->greeting('Hello ' . $notifiable->name)
+            ->line('A new order has been placed on one of your books.')
+            ->line('Book: ' . $this->order->orderItems->first()->book->title)
+            ->action('View Orders', url('/orders')) // لو عندك واجهة
+            ->line('Thank you for using our application!');
     }
 
     public function toDatabase($notifiable)

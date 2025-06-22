@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\OrderItem;
 use App\Models\User;
+use App\Models\Book;
 
 class Order extends Model
 {
@@ -24,7 +25,7 @@ class Order extends Model
     {
         return $this->belongsTo(User::class, 'client_id');
     }
-    
+
 
     public function owner()
     {
@@ -34,5 +35,9 @@ class Order extends Model
     public function orderItems()
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function book() {
+        return $this->hasOneThrough(Book::class, OrderItem::class, 'order_id', 'id', 'id', 'book_id');
     }
 }

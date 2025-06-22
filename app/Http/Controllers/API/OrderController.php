@@ -16,6 +16,8 @@ use App\Models\OrderItem;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
 use App\Mail\OrderCreatedNotification;
+use App\Mail\OrderUpdatedNotification;
+use App\Mail\OrderAcceptedNotification;
 use App\Notifications\OrderPlacedNotification;
 use App\Notifications\OrderStatusUpdatedNotification;
 

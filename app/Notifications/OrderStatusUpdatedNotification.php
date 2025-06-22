@@ -27,7 +27,18 @@ class OrderStatusUpdatedNotification extends Notification
 
     public function via($notifiable)
     {
-        return ['database'];
+        return ['mail', 'database']; // Save in DB + send email
+    }
+
+    public function toMail($notifiable)
+    {
+        return (new MailMessage)
+            ->subject('Your Order Has Been ' . ucfirst($this->status))
+            ->greeting('Hello ' . $notifiable->name)
+            ->line("Your order has been {$this->status}.")
+            ->line('Book: ' . $this->order->orderItems->first()->book->title)
+            ->action('View Orders', url('/orders'))
+            ->line('Thank you for using our service!');
     }
 
     public function toArray($notifiable)
