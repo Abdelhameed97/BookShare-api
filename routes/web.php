@@ -3,6 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\OrderAcceptedNotification;
+use App\Http\Controllers\SocialAuthController;
+use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\UserController;
 use App\Models\Order;
 
 Route::get('/', function () {
@@ -30,3 +33,7 @@ Route::get('/orders/{order}/status/{status}', function ($orderId, $status) {
 
     return "Order #$orderId has been $status";
 });
+
+
+Route::get('/auth/{provider}', [SocialAuthController::class, 'redirectToProvider']);
+Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'handleProviderCallback']);

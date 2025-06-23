@@ -22,6 +22,14 @@ use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\PaymentController;
 use App\Notifications\TestEmailNotification;
 
+// use App\Http\Controllers\API\SocialAuthController;
+// use social auth
+use Laravel\Socialite\Facades\Socialite;
+use App\Http\Controllers\SocialAuthController;
+
+
+
+
 use App\Models\User;
 
 
@@ -193,3 +201,4 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/payments/{payment}/verify', [PaymentController::class, 'verify']);
     Route::post('/payments/{payment}/refund', [PaymentController::class, 'refund']);
 });
+
