@@ -19,6 +19,7 @@ use App\Http\Controllers\BookController;
 use App\Http\Controllers\OrderItemController;
 
 use App\Http\Controllers\API\NotificationController;
+use App\Http\Controllers\API\PaymentController;
 use App\Notifications\TestEmailNotification;
 
 use App\Models\User;
@@ -46,6 +47,15 @@ Route::middleware('auth:sanctum')->group(function () {
 // Show all categories
 Route::get('/categories', [CategoryController::class, 'index']);
 
+// Public route to get libraries (owners only)
+Route::get('/libraries', function () {
+    $owners = User::where('role', 'owner')->get();
+    return response()->json([
+        'success' => true,
+        'data' => $owners
+    ]);
+});
+
 // comment
 Route::apiResource('/comment', commentController::class)->middleware('auth:sanctum');
 
@@ -69,6 +79,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/wishlist', [WishlistController::class, 'store']);
     Route::put('/wishlist/{id}', [WishlistController::class, 'update']);
     Route::delete('/wishlist/{id}', [WishlistController::class, 'destroy']);
+    Route::post('/wishlist/{id}/move-to-cart', [WishlistController::class, 'moveToCart']);
     Route::post('/wishlist/move-all-to-cart', [WishlistController::class, 'moveAllToCart']);
 });
 
@@ -111,13 +122,14 @@ Route::middleware('auth:sanctum')->get('/notifications', function (Request $requ
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/cart', [CartController::class, 'index']);
     Route::post('/cart', [CartController::class, 'store']);
+    Route::put('/cart/{id}', [CartController::class, 'update']);
     Route::delete('/cart/{id}', [CartController::class, 'destroy']);
 });
 
 // Order
 Route::middleware('auth:sanctum')->group(function () {
 
-   
+
     // Extra custom actions
     Route::get('orders/owner', [OrderController::class, 'ownerOrders']);
     Route::post('orders/{order}/accept', [OrderController::class, 'accept']);
@@ -153,7 +165,7 @@ Route::middleware('auth:sanctum')->get('/my-notifications', function (Request $r
 });
 
 Route::middleware('auth:sanctum')->group(function () {
-    
+
     // كل الإشعارات (مقروءة وغير مقروءة)
     Route::get('/notifications', [NotificationController::class, 'index']);
 
@@ -176,3 +188,10 @@ Route::middleware('auth:sanctum')->group(function () {
 //     return response()->json(['message' => 'Notification marked as read']);
 // });
 
+// Payment routes
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('/payments', PaymentController::class);
+    Route::get('/orders/{order}/payment', [PaymentController::class, 'getOrderPayment']);
+    Route::post('/payments/{payment}/verify', [PaymentController::class, 'verify']);
+    Route::post('/payments/{payment}/refund', [PaymentController::class, 'refund']);
+});

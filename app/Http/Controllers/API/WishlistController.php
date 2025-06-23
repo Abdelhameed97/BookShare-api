@@ -199,4 +199,39 @@ class WishlistController extends Controller
             ], 500);
         }
     }
+
+    public function moveToCart(string $id)  {
+        try {
+            $user = Auth::user();
+            $wishlistItem = Wishlist::findOrFail($id);
+
+            if ($wishlistItem->user_id !== $user->id) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized to move this item'], 403);
+            }
+
+            if ($wishlistItem->book->status !== 'available') {
+                return response()->json(['success' => false, 'message' => 'Book is not available'], 400);
+            }
+
+            $exists = Cart::where('user_id', $user->id)
+                ->where('book_id', $wishlistItem->book_id)
+                ->exists();
+
+            if (!$exists) {
+                Cart::create([
+                    'user_id' => $user->id,
+                    'book_id' => $wishlistItem->book_id,
+                    'quantity' => 1,
+                ]);
+            }
+
+            $wishlistItem->delete();
+
+            return response()->json(['success' => true, 'message' => 'Book moved to cart successfully'], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['success' => false, 'message' => 'Wishlist item not found'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to move item to cart', 'error' => $e->getMessage()], 500);
+        }
+    }
 }
