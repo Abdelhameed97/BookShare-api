@@ -33,14 +33,14 @@ class SocialAuthController extends Controller
 
             // إنشاء أو تحديث المستخدم بناءً على provider_id و provider
             $user = User::updateOrCreate([
-                'provider' => $provider,
-                'provider_id' => $socialUser->getId(),
+                'email' => $socialUser->getEmail(), // نستخدم الإيميل كمفتاح رئيسي أو provider_id فقط
             ], [
                 'name' => $socialUser->getName() ?? $socialUser->getNickname(),
-                'email' => $socialUser->getEmail(),
                 'email_verified_at' => now(),
                 'role' => $role,
-                'password' => bcrypt(Str::random(12)), // باسورد وهمي
+                'password' => bcrypt(Str::random(12)),
+                'provider' => $provider,
+                'provider_id' => $socialUser->getId(),
                 'provider_token' => $socialUser->token ?? null,
                 'provider_refresh_token' => $socialUser->refreshToken ?? null,
             ]);
