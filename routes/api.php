@@ -19,6 +19,7 @@ use App\Http\Controllers\BookController;
 use App\Http\Controllers\OrderItemController;
 
 use App\Http\Controllers\API\NotificationController;
+use App\Http\Controllers\API\PaymentController;
 use App\Notifications\TestEmailNotification;
 
 use App\Models\User;
@@ -184,3 +185,11 @@ Route::middleware('auth:sanctum')->group(function () {
 //     $notification->markAsRead();
 //     return response()->json(['message' => 'Notification marked as read']);
 // });
+
+// Payment routes
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('/payments', PaymentController::class);
+    Route::get('/orders/{order}/payment', [PaymentController::class, 'getOrderPayment']);
+    Route::post('/payments/{payment}/verify', [PaymentController::class, 'verify']);
+    Route::post('/payments/{payment}/refund', [PaymentController::class, 'refund']);
+});
