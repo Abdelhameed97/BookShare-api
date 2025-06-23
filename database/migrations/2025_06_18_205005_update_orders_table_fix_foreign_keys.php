@@ -17,10 +17,6 @@ return new class extends Migration
 
             $table->foreign('client_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('owner_id')->references('id')->on('users')->onDelete('cascade');
-
-            if (Schema::hasColumn('orders', 'book_id')) {
-                $table->dropColumn('book_id');
-            }
         });
     }
 
@@ -33,7 +29,6 @@ return new class extends Migration
             $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');
             $table->foreign('owner_id')->references('id')->on('owners')->onDelete('cascade');
 
-            $table->foreignId('book_id')->nullable();
         });
     }
 };

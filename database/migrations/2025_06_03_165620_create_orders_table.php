@@ -15,11 +15,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('client_id')->constrained('clients')->onDelete('cascade');
             $table->foreignId('owner_id')->constrained('owners')->onDelete('cascade');
-            $table->foreignId('book_id')->constrained('books')->onDelete('cascade');
-            $table->string('quantity');
-            $table->string('total_price');
+            $table->integer('quantity');
+            $table->integer('total_price');
             $table->enum('status', ['pending', 'accepted', 'rejected', 'delivered'])->default('pending');
             $table->enum('payment_method', ['cash', 'card'])->default('cash');
+            $table->boolean('is_paid')->default(false);
             $table->timestamps();
         });
     }
