@@ -22,6 +22,13 @@ use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\PaymentController;
 use App\Notifications\TestEmailNotification;
 
+// use App\Http\Controllers\API\SocialAuthController;
+// use social auth
+use Laravel\Socialite\Facades\Socialite;
+use App\Http\Controllers\API\SocialAuthController;
+
+
+
 use App\Models\User;
 
 
@@ -193,3 +200,29 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/payments/{payment}/verify', [PaymentController::class, 'verify']);
     Route::post('/payments/{payment}/refund', [PaymentController::class, 'refund']);
 });
+
+// Social Auth routes
+// google 
+
+
+
+// Route::get('/auth/github/redirect', function () {
+//     return Socialite::driver('github')->redirect();
+// });
+
+// Route::get('/auth/github/callback', function () {
+//     $githubUser = Socialite::driver('github')->user();
+ 
+//     $user = User::updateOrCreate([
+//         'github_id' => $githubUser->id,
+//     ], [
+//         'name' => $githubUser->name,
+//         'email' => $githubUser->email,
+//         'github_token' => $githubUser->token,
+//         'github_refresh_token' => $githubUser->refreshToken,
+//     ]);
+ 
+//     Auth::login($user);
+ 
+//     return redirect('/');
+// });

@@ -21,6 +21,9 @@ return new class extends Migration
             $table->string('national_id')->unique();
             $table->enum('role', ['admin', 'owner', 'client'])->default('client');
             $table->string('location')->nullable();
+            $table->string('provider_id')->nullable()->unique();
+            $table->string('provider_token')->nullable();
+            $table->string('provider_refresh_token')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
