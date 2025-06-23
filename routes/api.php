@@ -18,7 +18,7 @@ use App\Http\Controllers\API\OrderController;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\OrderItemController;
 
-
+use App\Http\Controllers\API\NotificationController;
 use App\Notifications\TestEmailNotification;
 
 use App\Models\User;
@@ -116,8 +116,18 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Order
 Route::middleware('auth:sanctum')->group(function () {
-    Route::apiResource('order', OrderController::class);
+
+   
+    // Extra custom actions
+    Route::get('orders/owner', [OrderController::class, 'ownerOrders']);
+    Route::post('orders/{order}/accept', [OrderController::class, 'accept']);
+    Route::post('orders/{order}/reject', [OrderController::class, 'reject']);
+
+    // RESTful Routes
+    Route::apiResource('orders', OrderController::class);
+
 });
+
 
 // Order Items
 Route::middleware('auth:sanctum')->group(
@@ -125,3 +135,44 @@ Route::middleware('auth:sanctum')->group(
         Route::apiResource('/order-items', OrderItemController::class);
     }
 );
+
+// Notification routes
+
+
+// Route::middleware('auth:sanctum')->get('/notifications', function (Request $request) {
+//     return response()->json([
+//         'success' => true,
+//         'data' => $request->user()->notifications,
+//     ]);
+// });
+
+Route::middleware('auth:sanctum')->get('/my-notifications', function (Request $request) {
+    return response()->json([
+        'notifications' => $request->user()->notifications,
+    ]);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    
+    // كل الإشعارات (مقروءة وغير مقروءة)
+    Route::get('/notifications', [NotificationController::class, 'index']);
+
+    // الإشعارات غير المقروءة فقط
+    Route::get('/notifications/unread', [NotificationController::class, 'unreadNotifications']);
+
+    // تعليم إشعار كمقروء
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+
+    // تعليم كل الإشعارات كمقروءة
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+
+    // حذف إشعار
+    Route::delete('/notifications/{id}', [NotificationController::class, 'deleteNotification']);
+});
+
+// Route::post('/notifications/{id}/read', function ($id) {
+//     $notification = auth()->user()->notifications()->findOrFail($id);
+//     $notification->markAsRead();
+//     return response()->json(['message' => 'Notification marked as read']);
+// });
+

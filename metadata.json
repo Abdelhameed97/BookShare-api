@@ -1,38 +1,802 @@
 [
   {
-    "title": "قوة الآن",
-    "author": "إكهارت تول",
-    "description": "كتاب عن الوعي والعيش في اللحظة الحالية",
-    "category": "تنمية ذاتية",
-    "language": "عربي",
-    "tags": [
-      "تنمية",
-      "وعي",
-      "عيش اللحظة"
+    "id": 1,
+    "title": "الرياضيات - الصف 3 إعدادي",
+    "author": "خالد عبد الله",
+    "description": "كتاب يشرح الرياضيات بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جيد جدًا",
+    "price": 67.44,
+    "rental_price": 22.19,
+    "educational_level": "إعدادي",
+    "genre": "الرياضيات",
+    "status": "sold",
+    "images": [
+      "book1.jpg"
     ]
   },
   {
-    "title": "الذكاء العاطفي",
-    "author": "دانيال جولمان",
-    "description": "يتناول أهمية الذكاء العاطفي في الحياة والعمل",
-    "category": "علم نفس",
-    "language": "عربي",
-    "tags": [
-      "ذكاء",
-      "عاطفة",
-      "تحكم"
+    "id": 2,
+    "title": "التاريخ - الصف 2 إعدادي",
+    "author": "د. فاطمة",
+    "description": "كتاب يشرح التاريخ بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جيد جدًا",
+    "price": 111.31,
+    "rental_price": 25.67,
+    "educational_level": "إعدادي",
+    "genre": "التاريخ",
+    "status": "sold",
+    "images": [
+      "book2.jpg"
     ]
   },
   {
-    "title": "فقه السيرة",
+    "id": 3,
+    "title": "الفيزياء - الصف 1 إعدادي",
     "author": "محمد الغزالي",
-    "description": "عرض سهل وميسر لسيرة النبي محمد صلى الله عليه وسلم",
-    "category": "كتب دينية",
-    "language": "عربي",
-    "tags": [
-      "سيرة",
-      "دين",
-      "نبي"
+    "description": "كتاب يشرح الفيزياء بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جيد",
+    "price": 111.03,
+    "rental_price": 29.63,
+    "educational_level": "إعدادي",
+    "genre": "الفيزياء",
+    "status": "sold",
+    "images": [
+      "book3.jpg"
+    ]
+  },
+  {
+    "id": 4,
+    "title": "الفلسفة - الصف 1 ابتدائي",
+    "author": "إيمان ياسر",
+    "description": "كتاب يشرح الفلسفة بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جيد",
+    "price": 56.47,
+    "rental_price": 27.66,
+    "educational_level": "ابتدائي",
+    "genre": "الفلسفة",
+    "status": "sold",
+    "images": [
+      "book4.jpg"
+    ]
+  },
+  {
+    "id": 5,
+    "title": "الرياضيات - الصف 2 إعدادي",
+    "author": "د. فاطمة",
+    "description": "كتاب يشرح الرياضيات بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جيد جدًا",
+    "price": 88.5,
+    "rental_price": 27.4,
+    "educational_level": "إعدادي",
+    "genre": "الرياضيات",
+    "status": "rented",
+    "images": [
+      "book5.jpg"
+    ]
+  },
+  {
+    "id": 6,
+    "title": "الأحياء - الصف 1 ابتدائي",
+    "author": "خالد عبد الله",
+    "description": "كتاب يشرح الأحياء بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جديد",
+    "price": 63.34,
+    "rental_price": 22.31,
+    "educational_level": "ابتدائي",
+    "genre": "الأحياء",
+    "status": "rented",
+    "images": [
+      "book6.jpg"
+    ]
+  },
+  {
+    "id": 7,
+    "title": "الفلسفة - الصف 1 ابتدائي",
+    "author": "خالد عبد الله",
+    "description": "كتاب يشرح الفلسفة بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جيد جدًا",
+    "price": 102.99,
+    "rental_price": 27.39,
+    "educational_level": "ابتدائي",
+    "genre": "الفلسفة",
+    "status": "available",
+    "images": [
+      "book7.jpg"
+    ]
+  },
+  {
+    "id": 8,
+    "title": "الكيمياء - الصف 2 ابتدائي",
+    "author": "د. فاطمة",
+    "description": "كتاب يشرح الكيمياء بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جديد",
+    "price": 113.64,
+    "rental_price": 18.43,
+    "educational_level": "ابتدائي",
+    "genre": "الكيمياء",
+    "status": "available",
+    "images": [
+      "book8.jpg"
+    ]
+  },
+  {
+    "id": 9,
+    "title": "الرياضيات - الصف 3 ثانوي",
+    "author": "أحمد علي",
+    "description": "كتاب يشرح الرياضيات بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جيد",
+    "price": 111.27,
+    "rental_price": 24.17,
+    "educational_level": "ثانوي",
+    "genre": "الرياضيات",
+    "status": "rented",
+    "images": [
+      "book9.jpg"
+    ]
+  },
+  {
+    "id": 10,
+    "title": "اللغة الإنجليزية - الصف 3 ثانوي",
+    "author": "خالد عبد الله",
+    "description": "كتاب يشرح اللغة الإنجليزية بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "ممتاز",
+    "price": 87.29,
+    "rental_price": 25.04,
+    "educational_level": "ثانوي",
+    "genre": "اللغة الإنجليزية",
+    "status": "sold",
+    "images": [
+      "book10.jpg"
+    ]
+  },
+  {
+    "id": 11,
+    "title": "اللغة العربية - الصف 2 ابتدائي",
+    "author": "إيمان ياسر",
+    "description": "كتاب يشرح اللغة العربية بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جيد",
+    "price": 78.76,
+    "rental_price": 20.54,
+    "educational_level": "ابتدائي",
+    "genre": "اللغة العربية",
+    "status": "sold",
+    "images": [
+      "book11.jpg"
+    ]
+  },
+  {
+    "id": 12,
+    "title": "التاريخ - الصف 2 إعدادي",
+    "author": "خالد عبد الله",
+    "description": "كتاب يشرح التاريخ بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "ممتاز",
+    "price": 100.0,
+    "rental_price": 23.67,
+    "educational_level": "إعدادي",
+    "genre": "التاريخ",
+    "status": "sold",
+    "images": [
+      "book12.jpg"
+    ]
+  },
+  {
+    "id": 13,
+    "title": "الدراسات الاجتماعية - الصف 2 ابتدائي",
+    "author": "منى حسن",
+    "description": "كتاب يشرح الدراسات الاجتماعية بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جيد",
+    "price": 97.91,
+    "rental_price": 15.07,
+    "educational_level": "ابتدائي",
+    "genre": "الدراسات الاجتماعية",
+    "status": "sold",
+    "images": [
+      "book13.jpg"
+    ]
+  },
+  {
+    "id": 14,
+    "title": "الكيمياء - الصف 2 إعدادي",
+    "author": "منى حسن",
+    "description": "كتاب يشرح الكيمياء بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "ممتاز",
+    "price": 102.41,
+    "rental_price": 12.21,
+    "educational_level": "إعدادي",
+    "genre": "الكيمياء",
+    "status": "available",
+    "images": [
+      "book14.jpg"
+    ]
+  },
+  {
+    "id": 15,
+    "title": "الجغرافيا - الصف 2 إعدادي",
+    "author": "إيمان ياسر",
+    "description": "كتاب يشرح الجغرافيا بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جيد",
+    "price": 83.06,
+    "rental_price": 11.79,
+    "educational_level": "إعدادي",
+    "genre": "الجغرافيا",
+    "status": "sold",
+    "images": [
+      "book15.jpg"
+    ]
+  },
+  {
+    "id": 16,
+    "title": "اللغة العربية - الصف 1 ابتدائي",
+    "author": "محمد الغزالي",
+    "description": "كتاب يشرح اللغة العربية بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جديد",
+    "price": 59.01,
+    "rental_price": 19.4,
+    "educational_level": "ابتدائي",
+    "genre": "اللغة العربية",
+    "status": "available",
+    "images": [
+      "book16.jpg"
+    ]
+  },
+  {
+    "id": 17,
+    "title": "المنطق - الصف 1 ابتدائي",
+    "author": "محمد الغزالي",
+    "description": "كتاب يشرح المنطق بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جديد",
+    "price": 105.12,
+    "rental_price": 14.47,
+    "educational_level": "ابتدائي",
+    "genre": "المنطق",
+    "status": "sold",
+    "images": [
+      "book17.jpg"
+    ]
+  },
+  {
+    "id": 18,
+    "title": "الدراسات الاجتماعية - الصف 2 ثانوي",
+    "author": "محمد الغزالي",
+    "description": "كتاب يشرح الدراسات الاجتماعية بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جيد جدًا",
+    "price": 108.51,
+    "rental_price": 13.79,
+    "educational_level": "ثانوي",
+    "genre": "الدراسات الاجتماعية",
+    "status": "available",
+    "images": [
+      "book18.jpg"
+    ]
+  },
+  {
+    "id": 19,
+    "title": "الأحياء - الصف 3 ثانوي",
+    "author": "إيمان ياسر",
+    "description": "كتاب يشرح الأحياء بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جديد",
+    "price": 74.26,
+    "rental_price": 22.99,
+    "educational_level": "ثانوي",
+    "genre": "الأحياء",
+    "status": "available",
+    "images": [
+      "book19.jpg"
+    ]
+  },
+  {
+    "id": 20,
+    "title": "العلوم - الصف 2 إعدادي",
+    "author": "إيمان ياسر",
+    "description": "كتاب يشرح العلوم بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جيد",
+    "price": 103.78,
+    "rental_price": 15.87,
+    "educational_level": "إعدادي",
+    "genre": "العلوم",
+    "status": "rented",
+    "images": [
+      "book20.jpg"
+    ]
+  },
+  {
+    "id": 21,
+    "title": "الفيزياء - الصف 2 إعدادي",
+    "author": "خالد عبد الله",
+    "description": "كتاب يشرح الفيزياء بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "ممتاز",
+    "price": 91.5,
+    "rental_price": 15.09,
+    "educational_level": "إعدادي",
+    "genre": "الفيزياء",
+    "status": "sold",
+    "images": [
+      "book21.jpg"
+    ]
+  },
+  {
+    "id": 22,
+    "title": "العلوم - الصف 1 ثانوي",
+    "author": "د. فاطمة",
+    "description": "كتاب يشرح العلوم بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جديد",
+    "price": 61.19,
+    "rental_price": 29.41,
+    "educational_level": "ثانوي",
+    "genre": "العلوم",
+    "status": "sold",
+    "images": [
+      "book22.jpg"
+    ]
+  },
+  {
+    "id": 23,
+    "title": "الرياضيات - الصف 1 إعدادي",
+    "author": "إيمان ياسر",
+    "description": "كتاب يشرح الرياضيات بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جيد جدًا",
+    "price": 112.27,
+    "rental_price": 19.24,
+    "educational_level": "إعدادي",
+    "genre": "الرياضيات",
+    "status": "available",
+    "images": [
+      "book23.jpg"
+    ]
+  },
+  {
+    "id": 24,
+    "title": "الدراسات الاجتماعية - الصف 3 ثانوي",
+    "author": "إيمان ياسر",
+    "description": "كتاب يشرح الدراسات الاجتماعية بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جديد",
+    "price": 67.58,
+    "rental_price": 20.18,
+    "educational_level": "ثانوي",
+    "genre": "الدراسات الاجتماعية",
+    "status": "sold",
+    "images": [
+      "book24.jpg"
+    ]
+  },
+  {
+    "id": 25,
+    "title": "الأحياء - الصف 3 ثانوي",
+    "author": "خالد عبد الله",
+    "description": "كتاب يشرح الأحياء بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جيد",
+    "price": 62.84,
+    "rental_price": 10.87,
+    "educational_level": "ثانوي",
+    "genre": "الأحياء",
+    "status": "available",
+    "images": [
+      "book25.jpg"
+    ]
+  },
+  {
+    "id": 26,
+    "title": "الدراسات الاجتماعية - الصف 1 ثانوي",
+    "author": "خالد عبد الله",
+    "description": "كتاب يشرح الدراسات الاجتماعية بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "ممتاز",
+    "price": 112.57,
+    "rental_price": 28.81,
+    "educational_level": "ثانوي",
+    "genre": "الدراسات الاجتماعية",
+    "status": "available",
+    "images": [
+      "book26.jpg"
+    ]
+  },
+  {
+    "id": 27,
+    "title": "الرياضيات - الصف 2 ابتدائي",
+    "author": "محمد الغزالي",
+    "description": "كتاب يشرح الرياضيات بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جيد",
+    "price": 104.36,
+    "rental_price": 15.68,
+    "educational_level": "ابتدائي",
+    "genre": "الرياضيات",
+    "status": "available",
+    "images": [
+      "book27.jpg"
+    ]
+  },
+  {
+    "id": 28,
+    "title": "الأحياء - الصف 3 ابتدائي",
+    "author": "إيمان ياسر",
+    "description": "كتاب يشرح الأحياء بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جيد",
+    "price": 100.55,
+    "rental_price": 20.33,
+    "educational_level": "ابتدائي",
+    "genre": "الأحياء",
+    "status": "sold",
+    "images": [
+      "book28.jpg"
+    ]
+  },
+  {
+    "id": 29,
+    "title": "اللغة الإنجليزية - الصف 1 ثانوي",
+    "author": "أحمد علي",
+    "description": "كتاب يشرح اللغة الإنجليزية بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جيد",
+    "price": 69.46,
+    "rental_price": 25.17,
+    "educational_level": "ثانوي",
+    "genre": "اللغة الإنجليزية",
+    "status": "rented",
+    "images": [
+      "book29.jpg"
+    ]
+  },
+  {
+    "id": 30,
+    "title": "الفيزياء - الصف 2 ابتدائي",
+    "author": "منى حسن",
+    "description": "كتاب يشرح الفيزياء بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "ممتاز",
+    "price": 58.41,
+    "rental_price": 20.24,
+    "educational_level": "ابتدائي",
+    "genre": "الفيزياء",
+    "status": "available",
+    "images": [
+      "book30.jpg"
+    ]
+  },
+  {
+    "id": 31,
+    "title": "المنطق - الصف 2 ابتدائي",
+    "author": "منى حسن",
+    "description": "كتاب يشرح المنطق بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جيد",
+    "price": 74.17,
+    "rental_price": 29.32,
+    "educational_level": "ابتدائي",
+    "genre": "المنطق",
+    "status": "available",
+    "images": [
+      "book31.jpg"
+    ]
+  },
+  {
+    "id": 32,
+    "title": "الدراسات الاجتماعية - الصف 3 إعدادي",
+    "author": "أحمد علي",
+    "description": "كتاب يشرح الدراسات الاجتماعية بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "ممتاز",
+    "price": 62.85,
+    "rental_price": 27.4,
+    "educational_level": "إعدادي",
+    "genre": "الدراسات الاجتماعية",
+    "status": "sold",
+    "images": [
+      "book32.jpg"
+    ]
+  },
+  {
+    "id": 33,
+    "title": "الأحياء - الصف 1 ابتدائي",
+    "author": "د. فاطمة",
+    "description": "كتاب يشرح الأحياء بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جيد",
+    "price": 112.76,
+    "rental_price": 18.81,
+    "educational_level": "ابتدائي",
+    "genre": "الأحياء",
+    "status": "sold",
+    "images": [
+      "book33.jpg"
+    ]
+  },
+  {
+    "id": 34,
+    "title": "الدراسات الاجتماعية - الصف 2 ثانوي",
+    "author": "محمد الغزالي",
+    "description": "كتاب يشرح الدراسات الاجتماعية بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جيد",
+    "price": 54.93,
+    "rental_price": 23.4,
+    "educational_level": "ثانوي",
+    "genre": "الدراسات الاجتماعية",
+    "status": "available",
+    "images": [
+      "book34.jpg"
+    ]
+  },
+  {
+    "id": 35,
+    "title": "الرياضيات - الصف 2 ابتدائي",
+    "author": "منى حسن",
+    "description": "كتاب يشرح الرياضيات بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جيد",
+    "price": 94.19,
+    "rental_price": 18.4,
+    "educational_level": "ابتدائي",
+    "genre": "الرياضيات",
+    "status": "sold",
+    "images": [
+      "book35.jpg"
+    ]
+  },
+  {
+    "id": 36,
+    "title": "اللغة الإنجليزية - الصف 3 ثانوي",
+    "author": "إيمان ياسر",
+    "description": "كتاب يشرح اللغة الإنجليزية بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "ممتاز",
+    "price": 78.37,
+    "rental_price": 18.61,
+    "educational_level": "ثانوي",
+    "genre": "اللغة الإنجليزية",
+    "status": "rented",
+    "images": [
+      "book36.jpg"
+    ]
+  },
+  {
+    "id": 37,
+    "title": "اللغة العربية - الصف 1 ابتدائي",
+    "author": "محمد الغزالي",
+    "description": "كتاب يشرح اللغة العربية بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جيد",
+    "price": 81.92,
+    "rental_price": 19.71,
+    "educational_level": "ابتدائي",
+    "genre": "اللغة العربية",
+    "status": "rented",
+    "images": [
+      "book37.jpg"
+    ]
+  },
+  {
+    "id": 38,
+    "title": "الكيمياء - الصف 3 ابتدائي",
+    "author": "د. فاطمة",
+    "description": "كتاب يشرح الكيمياء بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جيد",
+    "price": 59.99,
+    "rental_price": 21.23,
+    "educational_level": "ابتدائي",
+    "genre": "الكيمياء",
+    "status": "rented",
+    "images": [
+      "book38.jpg"
+    ]
+  },
+  {
+    "id": 39,
+    "title": "العلوم - الصف 1 ابتدائي",
+    "author": "خالد عبد الله",
+    "description": "كتاب يشرح العلوم بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جديد",
+    "price": 102.18,
+    "rental_price": 29.25,
+    "educational_level": "ابتدائي",
+    "genre": "العلوم",
+    "status": "sold",
+    "images": [
+      "book39.jpg"
+    ]
+  },
+  {
+    "id": 40,
+    "title": "الدراسات الاجتماعية - الصف 2 ابتدائي",
+    "author": "خالد عبد الله",
+    "description": "كتاب يشرح الدراسات الاجتماعية بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جيد",
+    "price": 53.51,
+    "rental_price": 24.91,
+    "educational_level": "ابتدائي",
+    "genre": "الدراسات الاجتماعية",
+    "status": "available",
+    "images": [
+      "book40.jpg"
+    ]
+  },
+  {
+    "id": 41,
+    "title": "الفيزياء - الصف 1 ثانوي",
+    "author": "أحمد علي",
+    "description": "كتاب يشرح الفيزياء بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جديد",
+    "price": 87.96,
+    "rental_price": 11.25,
+    "educational_level": "ثانوي",
+    "genre": "الفيزياء",
+    "status": "rented",
+    "images": [
+      "book41.jpg"
+    ]
+  },
+  {
+    "id": 42,
+    "title": "اللغة العربية - الصف 2 إعدادي",
+    "author": "منى حسن",
+    "description": "كتاب يشرح اللغة العربية بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جيد جدًا",
+    "price": 98.96,
+    "rental_price": 25.24,
+    "educational_level": "إعدادي",
+    "genre": "اللغة العربية",
+    "status": "available",
+    "images": [
+      "book42.jpg"
+    ]
+  },
+  {
+    "id": 43,
+    "title": "اللغة العربية - الصف 1 ابتدائي",
+    "author": "خالد عبد الله",
+    "description": "كتاب يشرح اللغة العربية بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "ممتاز",
+    "price": 83.36,
+    "rental_price": 22.41,
+    "educational_level": "ابتدائي",
+    "genre": "اللغة العربية",
+    "status": "rented",
+    "images": [
+      "book43.jpg"
+    ]
+  },
+  {
+    "id": 44,
+    "title": "الأحياء - الصف 2 ثانوي",
+    "author": "خالد عبد الله",
+    "description": "كتاب يشرح الأحياء بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جيد",
+    "price": 108.12,
+    "rental_price": 10.5,
+    "educational_level": "ثانوي",
+    "genre": "الأحياء",
+    "status": "rented",
+    "images": [
+      "book44.jpg"
+    ]
+  },
+  {
+    "id": 45,
+    "title": "اللغة العربية - الصف 3 ثانوي",
+    "author": "منى حسن",
+    "description": "كتاب يشرح اللغة العربية بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "ممتاز",
+    "price": 64.02,
+    "rental_price": 25.87,
+    "educational_level": "ثانوي",
+    "genre": "اللغة العربية",
+    "status": "rented",
+    "images": [
+      "book45.jpg"
+    ]
+  },
+  {
+    "id": 46,
+    "title": "الجغرافيا - الصف 3 ابتدائي",
+    "author": "خالد عبد الله",
+    "description": "كتاب يشرح الجغرافيا بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جيد جدًا",
+    "price": 61.33,
+    "rental_price": 20.67,
+    "educational_level": "ابتدائي",
+    "genre": "الجغرافيا",
+    "status": "sold",
+    "images": [
+      "book46.jpg"
+    ]
+  },
+  {
+    "id": 47,
+    "title": "الرياضيات - الصف 3 ثانوي",
+    "author": "د. فاطمة",
+    "description": "كتاب يشرح الرياضيات بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جيد جدًا",
+    "price": 102.91,
+    "rental_price": 21.21,
+    "educational_level": "ثانوي",
+    "genre": "الرياضيات",
+    "status": "sold",
+    "images": [
+      "book47.jpg"
+    ]
+  },
+  {
+    "id": 48,
+    "title": "اللغة الإنجليزية - الصف 2 ابتدائي",
+    "author": "إيمان ياسر",
+    "description": "كتاب يشرح اللغة الإنجليزية بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جيد",
+    "price": 106.61,
+    "rental_price": 26.02,
+    "educational_level": "ابتدائي",
+    "genre": "اللغة الإنجليزية",
+    "status": "rented",
+    "images": [
+      "book48.jpg"
+    ]
+  },
+  {
+    "id": 49,
+    "title": "الأحياء - الصف 2 إعدادي",
+    "author": "د. فاطمة",
+    "description": "كتاب يشرح الأحياء بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جديد",
+    "price": 103.13,
+    "rental_price": 20.74,
+    "educational_level": "إعدادي",
+    "genre": "الأحياء",
+    "status": "rented",
+    "images": [
+      "book49.jpg"
+    ]
+  },
+  {
+    "id": 50,
+    "title": "الجغرافيا - الصف 1 ابتدائي",
+    "author": "د. فاطمة",
+    "description": "كتاب يشرح الجغرافيا بشكل مبسط للصفوف الدراسية.",
+    "category": "تعليمي",
+    "condition": "جيد",
+    "price": 56.67,
+    "rental_price": 15.76,
+    "educational_level": "ابتدائي",
+    "genre": "الجغرافيا",
+    "status": "rented",
+    "images": [
+      "book50.jpg"
     ]
   }
 ]
