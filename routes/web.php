@@ -37,4 +37,3 @@ Route::get('/orders/{order}/status/{status}', function ($orderId, $status) {
 
 Route::get('/auth/{provider}', [SocialAuthController::class, 'redirectToProvider']);
 Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'handleProviderCallback']);
-

@@ -7,46 +7,58 @@ use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Hash;
-use App\Http\Controllers\API\AuthController; // إذا كنت تستخدم AuthController في مكان آخر
 
 class SocialAuthController extends Controller
 {
     // Step 1: Redirect to provider
     public function redirectToProvider(Request $request, $provider)
     {
-        session(['role' => $request->role]); // نحفظ الدور مؤقتاً في السيشن
+        $role = $request->query('role', 'client'); // لو مفيش role اعتبره client
+
+        // حفظ الدور مؤقتًا في السيشن (ممكن نستخدم redis أو token بدلًا منه في الإنتاج)
+        session(['social_role' => $role]);
+
+        // $url = Socialite::driver($provider)->redirect()->getTargetUrl();
+        // dd($url); // اطبعه علشان 
+
         return Socialite::driver($provider)->redirect();
     }
 
-    // Step 2: Handle provider callback
-    public function handleProviderCallback($provider)
+    // Step 2: Handle callback from provider
+    public function handleProviderCallback(Request $request, $provider)
     {
         try {
             $socialUser = Socialite::driver($provider)->stateless()->user();
+            $role = session('social_role', 'client'); // استرجاع الدور
 
-            $role = session('role', 'client'); // لو مفيش دور اعتبره client
-
-            // نحاول نلاقي يوزر بنفس الإيميل أو الـ provider ID
+            // إنشاء أو تحديث المستخدم بناءً على provider_id و provider
             $user = User::updateOrCreate([
-                'provider_id' => $socialUser->id,
+                'provider' => $provider,
+                'provider_id' => $socialUser->getId(),
             ], [
-                'name' => $socialUser->name,
-                'email' => $socialUser->email,
+                'name' => $socialUser->getName() ?? $socialUser->getNickname(),
+                'email' => $socialUser->getEmail(),
+                'email_verified_at' => now(),
                 'role' => $role,
-                'provider_token' => $socialUser->token,
-                'provider_refresh_token' => $socialUser->refreshToken,
+                'password' => bcrypt(Str::random(12)), // باسورد وهمي
+                'provider_token' => $socialUser->token ?? null,
+                'provider_refresh_token' => $socialUser->refreshToken ?? null,
             ]);
 
-            Auth::login($user); // تسجيل الدخول
+            Auth::login($user);
 
-            // يمكنك استخدام JWT أو Sanctum هنا – مؤقتاً سنرسل توكن وهمي
-            $token = $user->createToken("login")->plainTextToken;
+            // إنشاء توكن باستخدام Sanctum
+            $token = $user->createToken("social_login")->plainTextToken;
 
-            // نرجّع المستخدم لصفحة React مع التوكن والرول
-            return redirect()->away(env('FRONTEND_URL') . "/social-callback#token=$token&role=$role");
+            // إعادة التوجيه إلى React مع التوكن والرول باستخدام hash
+            $redirectUrl = env('FRONTEND_URL') . "/social-callback#token=$token&role=$role";
+
+            return redirect()->away($redirectUrl);
         } catch (\Exception $e) {
-            return redirect()->away(env('FRONTEND_URL') . '/login')->withErrors(['msg' => 'Social login failed.']);
+            return response()->json([
+                'message' => 'Social login failed.',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 }
