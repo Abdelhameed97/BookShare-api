@@ -27,6 +27,11 @@ class User extends Authenticatable
         'id_image',
         'role',
         'location',
+        'provider',
+        'provider_id',
+        'provider_token',
+        'provider_refresh_token',
+        'email_verified_at',
     ];
 
     /**
