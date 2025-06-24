@@ -17,7 +17,15 @@ return new class extends Migration
             $table->foreignId('owner_id')->constrained('owners')->onDelete('cascade');
             $table->integer('quantity');
             $table->integer('total_price');
-            $table->enum('status', ['pending', 'accepted', 'rejected', 'delivered'])->default('pending');
+            $table->enum('status', [
+                'pending',
+                'accepted',
+                'rejected',
+                'processing',
+                'shipped',
+                'delivered',
+                'cancelled'
+            ])->default('pending');
             $table->enum('payment_method', ['cash', 'card'])->default('cash');
             $table->boolean('is_paid')->default(false);
             $table->timestamps();
