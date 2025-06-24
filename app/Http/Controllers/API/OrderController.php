@@ -230,7 +230,7 @@ class OrderController extends Controller
 
             DB::beginTransaction();
 
-            if ($order->status === 'pending') {
+            if (in_array($order->status, ['pending', 'processing'])) {
                 foreach ($order->orderItems as $item) {
                     if ($item->book) {
                         $item->book->quantity += $item->quantity;
@@ -239,25 +239,26 @@ class OrderController extends Controller
                 }
             }
 
-            $order->orderItems()->delete();
-            $order->delete();
+            $order->status = 'cancelled';
+            $order->save();
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Order deleted successfully and stock restored if applicable.'
+                'message' => 'Order cancelled successfully and stock restored if applicable.'
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete order.',
+                'message' => 'Failed to cancel order.',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
+
 
     public function ownerOrders(Request $request)
     {
