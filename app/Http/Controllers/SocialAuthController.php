@@ -10,30 +10,36 @@ use Illuminate\Support\Str;
 
 class SocialAuthController extends Controller
 {
-    // Step 1: Redirect to provider
+    /**
+     * Step 1: Redirect user to the provider (Google, GitHub, etc.)
+     */
     public function redirectToProvider(Request $request, $provider)
     {
-        $role = $request->query('role', 'client'); // لو مفيش role اعتبره client
+        // Get role from the request (or use 'client' as default)
+        $role = $request->query('role', 'client');
 
-        // حفظ الدور مؤقتًا في السيشن (ممكن نستخدم redis أو token بدلًا منه في الإنتاج)
+        // Store the role in session temporarily (can be improved in production)
         session(['social_role' => $role]);
 
-        // $url = Socialite::driver($provider)->redirect()->getTargetUrl();
-        // dd($url); // اطبعه علشان 
-
+        // Redirect to provider login page
         return Socialite::driver($provider)->redirect();
     }
 
-    // Step 2: Handle callback from provider
+    /**
+     * Step 2: Handle the callback from provider
+     */
     public function handleProviderCallback(Request $request, $provider)
     {
         try {
+            // Get user info from provider (stateless avoids session issues)
             $socialUser = Socialite::driver($provider)->stateless()->user();
-            $role = session('social_role', 'client'); // استرجاع الدور
 
-            // إنشاء أو تحديث المستخدم بناءً على provider_id و provider
+            // Retrieve role from session or fallback to 'client'
+            $role = session('social_role', 'client');
+
+            // Create or update user based on email
             $user = User::updateOrCreate([
-                'email' => $socialUser->getEmail(), // نستخدم الإيميل كمفتاح رئيسي أو provider_id فقط
+                'email' => $socialUser->getEmail(),
             ], [
                 'name' => $socialUser->getName() ?? $socialUser->getNickname(),
                 'email_verified_at' => now(),
@@ -45,16 +51,19 @@ class SocialAuthController extends Controller
                 'provider_refresh_token' => $socialUser->refreshToken ?? null,
             ]);
 
+            // Log the user in
             Auth::login($user);
 
-            // إنشاء توكن باستخدام Sanctum
-            $token = $user->createToken("social_login")->plainTextToken;
+            // Create Sanctum token
+            $token = $user->createToken('social_login')->plainTextToken;
 
-            // إعادة التوجيه إلى React مع التوكن والرول باستخدام hash
+            // Redirect to your frontend app with token and role in hash
             $redirectUrl = env('FRONTEND_URL') . "/social-callback#token=$token&role=$role";
 
             return redirect()->away($redirectUrl);
+
         } catch (\Exception $e) {
+            // Handle login failure
             return response()->json([
                 'message' => 'Social login failed.',
                 'error' => $e->getMessage()
