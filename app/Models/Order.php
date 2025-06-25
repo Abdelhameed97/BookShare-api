@@ -40,4 +40,9 @@ class Order extends Model
     public function book() {
         return $this->hasOneThrough(Book::class, OrderItem::class, 'order_id', 'id', 'id', 'book_id');
     }
+
+    public function payment()
+    {
+        return $this->hasOne(Payment::class);
+    }
 }

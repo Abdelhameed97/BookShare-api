@@ -83,21 +83,27 @@ class PaymentController extends Controller
             }
 
             // Create payment
-            $payment = Payment::create([
+            $paymentData = [
                 'order_id' => $order->id,
                 'user_id' => $user->id,
                 'method' => $request->method,
                 'amount' => $order->total_price,
-                'status' => 'paid',
-            ]);
+                'status' => $request->method === 'stripe' ? 'pending' : 'paid',
+            ];
 
-            // Mark order as paid
-            $order->is_paid = true;
-            $order->save();
+            $payment = Payment::create($paymentData);
+
+            // For non-Stripe payments, mark order as paid immediately
+            if ($request->method !== 'stripe') {
+                $order->is_paid = true;
+                $order->save();
+            }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Payment completed successfully.',
+                'message' => $request->method === 'stripe' ?
+                    'Payment intent created. Please complete your payment.' :
+                    'Payment completed successfully.',
                 'data' => $payment->load('order', 'user')
             ], 201);
         } catch (\Exception $e) {

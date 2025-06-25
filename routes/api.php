@@ -20,6 +20,8 @@ use App\Http\Controllers\OrderItemController;
 
 use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\PaymentController;
+use App\Http\Controllers\API\StripePaymentController;
+use App\Http\Controllers\API\StripeWebhookController;
 use App\Notifications\TestEmailNotification;
 
 // use App\Http\Controllers\API\SocialAuthController;
@@ -200,5 +202,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders/{order}/payment', [PaymentController::class, 'getOrderPayment']);
     Route::post('/payments/{payment}/verify', [PaymentController::class, 'verify']);
     Route::post('/payments/{payment}/refund', [PaymentController::class, 'refund']);
+    // Stripe Payment Routes
+    Route::post('/stripe/create-payment-intent', [StripePaymentController::class, 'createPaymentIntent']);
+    Route::post('/stripe/confirm-payment', [StripePaymentController::class, 'confirmPayment']);
 });
 
+// Stripe Webhook Route
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handleWebhook']);
