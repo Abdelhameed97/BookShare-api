@@ -117,11 +117,11 @@ With best regards, team BookShare', function ($message) {
     return response()->json(['message' => 'Test email sent successfully! Check your inbox.']);
 });
 
-Route::get('/test-email', function () {
-    $user = User::find(1); // Replace with the user's ID you want to send the email to
-    $user->notify(new TestEmailNotification());
-    return "Email sent!";
-});
+// Route::get('/test-email', function () {
+//     $user = User::find(1); // Replace with the user's ID you want to send the email to
+//     $user->notify(new TestEmailNotification());
+//     return "Email sent!";
+// });
 
 Route::middleware('auth:sanctum')->get('/notifications', function (Request $request) {
     return $request->user()->notifications;
@@ -156,15 +156,6 @@ Route::middleware('auth:sanctum')->group(
     }
 );
 
-// Notification routes
-
-
-// Route::middleware('auth:sanctum')->get('/notifications', function (Request $request) {
-//     return response()->json([
-//         'success' => true,
-//         'data' => $request->user()->notifications,
-//     ]);
-// });
 
 Route::middleware('auth:sanctum')->get('/my-notifications', function (Request $request) {
     return response()->json([
@@ -189,12 +180,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // حذف إشعار
     Route::delete('/notifications/{id}', [NotificationController::class, 'deleteNotification']);
 });
-
-// Route::post('/notifications/{id}/read', function ($id) {
-//     $notification = auth()->user()->notifications()->findOrFail($id);
-//     $notification->markAsRead();
-//     return response()->json(['message' => 'Notification marked as read']);
-// });
 
 // Payment routes
 Route::middleware('auth:sanctum')->group(function () {
