@@ -10,7 +10,7 @@
 
         {{-- Logo --}}
         <div style="text-align: center;">
-            <img src="{{ asset('storage/logo.png') }}" alt="BookShare Logo" style="max-width: 120px; margin-bottom: 20px;">
+            <img src="https://drive.google.com/file/d/1b-ocp50yvXTgKstZEzBN072x6raz7JZ6/view?usp=sharing" alt="BookShare Logo" style="max-width: 120px; margin-bottom: 20px;">
         </div>
 
         {{-- Title --}}
@@ -34,18 +34,6 @@
             <li><strong>Location:</strong> {{ $client->location }}</li>
         </ul>
 
-        {{-- Action Buttons --}}
-        <div style="text-align: center; margin-top: 30px;">
-            <form action="{{ url('/api/orders/' . $order->id . '/accept') }}" method="POST" style="display: inline-block; margin-right: 10px;">
-                <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                <button type="submit" style="background-color: green; color: white; padding: 10px 20px; border: none; border-radius: 5px;">Accept</button>
-            </form>
-
-            <form action="{{ url('/api/orders/' . $order->id . '/reject') }}" method="POST" style="display: inline-block;">
-                <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                <button type="submit" style="background-color: red; color: white; padding: 10px 20px; border: none; border-radius: 5px;">Reject</button>
-            </form>
-        </div>
 
         {{-- Footer --}}
         <p style="margin-top: 40px;">Best regards,<br>BookShare 📚 Team</p>
