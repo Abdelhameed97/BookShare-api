@@ -11,7 +11,10 @@
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.0",
         "laravel/socialite": "^5.21",
-        "laravel/tinker": "^2.10.1"
+        "laravel/tinker": "^2.10.1",
+        "paypal/paypal-checkout-sdk": "^1.0",
+        "paypal/rest-api-sdk-php": "^1.6",
+        "stripe/stripe-php": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

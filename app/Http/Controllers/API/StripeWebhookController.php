@@ -7,6 +7,9 @@ use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
+use Stripe\Webhook;
+use Stripe\Exception\SignatureVerificationException;
+use Stripe\PaymentIntent;
 
 class StripeWebhookController extends Controller
 {
@@ -17,7 +20,7 @@ class StripeWebhookController extends Controller
         $endpointSecret = config('services.stripe.webhook_secret');
 
         try {
-            $event = \Stripe\Webhook::constructEvent(
+            $event = Webhook::constructEvent(
                 $payload,
                 $sigHeader,
                 $endpointSecret
@@ -25,7 +28,7 @@ class StripeWebhookController extends Controller
         } catch (\UnexpectedValueException $e) {
             Log::error('Stripe webhook error: Invalid payload');
             return response()->json(['error' => 'Invalid payload'], Response::HTTP_BAD_REQUEST);
-        } catch (\Stripe\Exception\SignatureVerificationException $e) {
+        } catch (SignatureVerificationException $e) {
             Log::error('Stripe webhook error: Invalid signature');
             return response()->json(['error' => 'Invalid signature'], Response::HTTP_BAD_REQUEST);
         }
@@ -34,22 +37,24 @@ class StripeWebhookController extends Controller
 
         switch ($event->type) {
             case 'payment_intent.succeeded':
-                $paymentIntent = $event->data->object;
-                $this->handlePaymentIntentSucceeded($paymentIntent);
+                $this->handlePaymentIntentSucceeded($event->data->object);
                 break;
 
             case 'payment_intent.payment_failed':
-                $paymentIntent = $event->data->object;
-                $this->handlePaymentIntentFailed($paymentIntent);
+                $this->handlePaymentIntentFailed($event->data->object);
                 break;
 
-                // Handle other event types as needed
+            case 'payment_intent.amount_capturable_updated':
+                $this->handlePaymentIntentAmountCapturableUpdated($event->data->object);
+                break;
+
+                // Add more event handlers as needed
         }
 
         return response()->json(['success' => true]);
     }
 
-    protected function handlePaymentIntentSucceeded($paymentIntent)
+    protected function handlePaymentIntentSucceeded(PaymentIntent $paymentIntent)
     {
         $payment = Payment::where('stripe_payment_id', $paymentIntent->id)->first();
 
@@ -61,11 +66,12 @@ class StripeWebhookController extends Controller
             $order->is_paid = true;
             $order->save();
 
-            // You might want to send a notification here
+            // Send payment success notification
+            // $order->user->notify(new PaymentSuccessNotification($order));
         }
     }
 
-    protected function handlePaymentIntentFailed($paymentIntent)
+    protected function handlePaymentIntentFailed(PaymentIntent $paymentIntent)
     {
         $payment = Payment::where('stripe_payment_id', $paymentIntent->id)->first();
 
@@ -73,7 +79,13 @@ class StripeWebhookController extends Controller
             $payment->status = 'failed';
             $payment->save();
 
-            // You might want to send a notification here
+            // Send payment failure notification
+            // $order->user->notify(new PaymentFailedNotification($order));
         }
+    }
+
+    protected function handlePaymentIntentAmountCapturableUpdated(PaymentIntent $paymentIntent)
+    {
+        // Handle cases where payment requires capture
     }
 }

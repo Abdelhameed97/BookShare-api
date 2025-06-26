@@ -21,12 +21,16 @@ class Order extends Model
         'payment_method'
     ];
 
+    // Order.php
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'client_id'); 
+    }
+
     public function client()
     {
         return $this->belongsTo(User::class, 'client_id');
     }
-
-
     public function owner()
     {
         return $this->belongsTo(User::class, 'owner_id');

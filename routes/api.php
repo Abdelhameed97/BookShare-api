@@ -20,6 +20,7 @@ use App\Http\Controllers\OrderItemController;
 
 use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\PaymentController;
+use App\Http\Controllers\API\PayPalPaymentController;
 use App\Http\Controllers\API\StripePaymentController;
 use App\Http\Controllers\API\StripeWebhookController;
 use App\Notifications\TestEmailNotification;
@@ -190,7 +191,14 @@ Route::middleware('auth:sanctum')->group(function () {
     // Stripe Payment Routes
     Route::post('/stripe/create-payment-intent', [StripePaymentController::class, 'createPaymentIntent']);
     Route::post('/stripe/confirm-payment', [StripePaymentController::class, 'confirmPayment']);
+    // PayPal Payment Routes
+    Route::post('/paypal/create-payment', [PayPalPaymentController::class, 'createPayment']);
+    Route::get('/paypal/success/{payment}', [PayPalPaymentController::class, 'success'])->name('paypal.success');
+    Route::get('/paypal/cancel/{payment}', [PayPalPaymentController::class, 'cancel'])->name('paypal.cancel');
 });
 
 // Stripe Webhook Route
 Route::post('/stripe/webhook', [StripeWebhookController::class, 'handleWebhook']);
+
+// PayPal Webhook Route
+Route::post('/paypal/webhook', [PayPalPaymentController::class, 'webhook']);
