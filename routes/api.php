@@ -20,6 +20,9 @@ use App\Http\Controllers\OrderItemController;
 
 use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\PaymentController;
+use App\Http\Controllers\API\PayPalPaymentController;
+use App\Http\Controllers\API\StripePaymentController;
+use App\Http\Controllers\API\StripeWebhookController;
 use App\Notifications\TestEmailNotification;
 
 // use App\Http\Controllers\API\SocialAuthController;
@@ -51,6 +54,8 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('categories', CategoryController::class);
 });
+// Show all categories
+Route::get('/categories', [CategoryController::class, 'index']);
 
 // Public route to get libraries (owners only)
 Route::get('/libraries', function () {
@@ -184,8 +189,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders/{order}/payment', [PaymentController::class, 'getOrderPayment']);
     Route::post('/payments/{payment}/verify', [PaymentController::class, 'verify']);
     Route::post('/payments/{payment}/refund', [PaymentController::class, 'refund']);
+    // Stripe Payment Routes
+    Route::post('/stripe/create-payment-intent', [StripePaymentController::class, 'createPaymentIntent']);
+    Route::post('/stripe/confirm-payment', [StripePaymentController::class, 'confirmPayment']);
+    // PayPal Payment Routes
+    Route::post('/paypal/create-payment', [PayPalPaymentController::class, 'createPayment']);
+    Route::get('/paypal/success/{payment}', [PayPalPaymentController::class, 'success'])->name('paypal.success');
+    Route::get('/paypal/cancel/{payment}', [PayPalPaymentController::class, 'cancel'])->name('paypal.cancel');
 });
 
-Route::get('/admin/stats', [AdminController::class, 'stats']);
+// Stripe Webhook Route
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handleWebhook']);
 
-
+// PayPal Webhook Route
+Route::post('/paypal/webhook', [PayPalPaymentController::class, 'webhook']);

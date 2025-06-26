@@ -20,7 +20,7 @@ class AuthServiceProvider extends ServiceProvider
         User::class => UserPolicy::class,
         Category::class => CategoryPolicy::class,
         Order::class => OrderPolicy::class,
-        
+
     ];
 
     /**
@@ -29,5 +29,9 @@ class AuthServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->registerPolicies();
+
+        Gate::define('create-payment', function ($user, $order) {
+            return $order->client_id === $user->id || $user->is_admin;
+        });
     }
 }

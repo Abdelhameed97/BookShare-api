@@ -15,6 +15,12 @@ class Payment extends Model
         'method',
         'amount',
         'status',
+        'stripe_payment_id',
+        'paypal_payment_id'
+    ];
+
+    protected $casts = [
+        'amount' => 'float',
     ];
 
     public function order()

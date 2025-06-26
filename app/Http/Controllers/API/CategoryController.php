@@ -19,15 +19,19 @@ class CategoryController extends Controller
         //     return response()->json(['message' => 'You are not authorized to view categories'], 403);
         // }
 
-        return response()->json([
+     return response()->json([
             'categories' => Category::all()
-        ], 200);
+           ], 200);
     }
 
     /**
      * Store a newly created category.
      */
     public function store(StoreCategoryRequest $request)
+<<<<<<< HEAD
+    {
+        if (!auth()->user()->isAdmin()) {
+=======
     {        
 
         // Check if the user is an admin
@@ -35,14 +39,14 @@ class CategoryController extends Controller
         /** @var \App\Models\User $user */
         $user = $request->user();
         if (!$user->isAdmin()) {
+>>>>>>> a99b543d0b39b43f1f5ea2d2d8131779e6bf51db
             return response()->json(['message' => 'You are not authorized to create categories'], 403);
         }
 
         $validatedData = $request->validated();
-
         $category = Category::create([
             'name' => $validatedData['name'],
-            'type' => $validatedData['type'] ?? 'general', // Default to 'general' if not provided
+            'type' => $validatedData['type'] ?? 'general',
         ]);
 
         return response()->json([
@@ -52,17 +56,21 @@ class CategoryController extends Controller
     }
 
     /**
-     * Display the specified category.
+     * Display the specified category and its books.
      */
     public function show(string $id)
     {
-        $category = Category::find($id);
+        $category = Category::with('books.user')->find($id);
 
         if (!$category) {
             return response()->json(['message' => "Category of id {$id} not found"], 404);
         }
 
-        return response()->json(['category' => $category], 200);
+        return response()->json([
+            'id' => $category->id,
+            'name' => $category->name,
+            'books' => $category->books,
+        ]);
     }
 
     /**
