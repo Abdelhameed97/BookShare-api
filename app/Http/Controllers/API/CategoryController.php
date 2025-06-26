@@ -32,7 +32,9 @@ class CategoryController extends Controller
 
         // Check if the user is an admin
         // This assumes you have a method isAdmin() in your User model
-        if (!auth()->user()->isAdmin()) {
+        /** @var \App\Models\User $user */
+        $user = $request->user();
+        if (!$user->isAdmin()) {
             return response()->json(['message' => 'You are not authorized to create categories'], 403);
         }
 
@@ -74,7 +76,9 @@ class CategoryController extends Controller
             return response()->json(['message' => "Category of id {$id} not found"], 404);
         }
 
-        if (!auth()->user()->isAdmin()) {
+        /** @var \App\Models\User $user */
+        $user = $request->user();
+        if (!$user->isAdmin()) {
             return response()->json(['message' => 'You are not authorized to update categories'], 403);
         }
 
@@ -90,7 +94,7 @@ class CategoryController extends Controller
     /**
      * Remove the specified category.
      */
-    public function destroy(string $id)
+    public function destroy(Request $request, string $id)
     {
         $category = Category::find($id);
 
@@ -98,7 +102,9 @@ class CategoryController extends Controller
             return response()->json(['message' => "Category of id {$id} not found"], 404);
         }
 
-        if (!auth()->user()->isAdmin()) {
+        /** @var \App\Models\User $user */
+        $user = $request->user();
+        if (!$user->isAdmin()) {
             return response()->json(['message' => 'You are not authorized to delete categories'], 403);
         }
 

@@ -27,8 +27,7 @@ use App\Notifications\TestEmailNotification;
 use Laravel\Socialite\Facades\Socialite;
 use App\Http\Controllers\SocialAuthController;
 
-
-
+use App\Http\Controllers\AdminController;
 
 use App\Models\User;
 
@@ -186,5 +185,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/payments/{payment}/verify', [PaymentController::class, 'verify']);
     Route::post('/payments/{payment}/refund', [PaymentController::class, 'refund']);
 });
+
+Route::get('/admin/stats', [AdminController::class, 'stats']);
 
 
