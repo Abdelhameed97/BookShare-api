@@ -18,21 +18,22 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
-        // public function isAdmin(): bool
-        // {
-        //     return $this->role === 'admin';
-        // }
-        
-        if(!auth()->user()->isAdmin()){
+        /** @var \App\Models\User $user */
+        $user = $request->user();
+        if(!$user->isAdmin()){
             return response()->json(['message' => 'You are not authorized to view users'], 403);
-        }        
-        return UserResource::collection(User::all());
-        // $user = User::all();
-        // return response()->json(['users' => $user], 200);
+        }
 
+        $query = User::query();
+
+        // Filter by role if the request has a 'role' parameter
+        if ($request->has('role')) {
+            $query->where('role', $request->role);
+        }
+
+        return UserResource::collection($query->get());
     }
 
     /**
@@ -44,7 +45,9 @@ class UserController extends Controller
             // dd(auth()->user()); // ⬅️ Debugging line to check the authenticated user
 
         // The data is already validated by StoreUserRequest
-        if(!auth()->user()->isAdmin()){
+        /** @var \App\Models\User $user */
+        $user = $request->user();
+        if(!$user->isAdmin()){
             return response()->json(['message' => 'You are not authorized to create users'], 403);
         }
         $validatedData = $request->validated();
@@ -84,7 +87,7 @@ class UserController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Request $request, string $id)
     {
         
         $user = User::find($id);
@@ -92,7 +95,9 @@ class UserController extends Controller
             return response()->json(['message' => 'User of id ' . $id . ' not found'], 404);
         }
         // admin can view specific user and user can view his own profile
-        if(!auth()->user()->isAdmin() && auth()->user()->id != $id){
+        /** @var \App\Models\User $currentUser */
+        $currentUser = $request->user();
+        if(!$currentUser->isAdmin() && $currentUser->id != $id){
             return response()->json(['message' => 'You are not authorized to view users'], 403);
         }
         return new UserResource($user);
@@ -114,7 +119,9 @@ class UserController extends Controller
 
     
         // 2. Check authorization
-        if (!auth()->user()->isAdmin() && auth()->user()->id != $id) {
+        /** @var \App\Models\User $currentUser */
+        $currentUser = $request->user();
+        if (!$currentUser->isAdmin() && $currentUser->id != $id) {
             return response()->json([
                 'message' => 'You are not authorized to update this user.'
             ], 403);
@@ -183,7 +190,7 @@ class UserController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-   public function destroy(string $id)
+   public function destroy(Request $request, string $id)
     {
         // 1. Check if user exists
         $user = User::find($id);
@@ -194,7 +201,9 @@ class UserController extends Controller
         }
 
         // 2. Authorization check
-        if (!auth()->user()->isAdmin()) {
+        /** @var \App\Models\User $currentUser */
+        $currentUser = $request->user();
+        if (!$currentUser->isAdmin()) {
             return response()->json([
                 'message' => 'You are not authorized to delete users'
             ], 403);

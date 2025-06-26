@@ -160,8 +160,10 @@ class BookController extends Controller
             'message' => 'Book not found'
         ], 404);
     }
-    // Check if user owns the book
-    if ($book->user_id !== Auth::id()) {
+    // Check if user owns the book or is an admin
+    /** @var \App\Models\User $user */
+    $user = Auth::user();
+    if ($book->user_id !== $user->id && !$user->isAdmin()) {
         return response()->json([
             'status' => 'error',
             'message' => 'Unauthorized'
@@ -233,8 +235,10 @@ class BookController extends Controller
         
 
       
-        // Check if user owns the book
-        if ($book->user_id !== Auth::id()) {
+        // Check if user owns the book or is an admin
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        if ($book->user_id !== $user->id && !$user->isAdmin()) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Unauthorized'
