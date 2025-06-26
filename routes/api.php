@@ -30,8 +30,7 @@ use App\Notifications\TestEmailNotification;
 use Laravel\Socialite\Facades\Socialite;
 use App\Http\Controllers\SocialAuthController;
 
-
-
+use App\Http\Controllers\AdminController;
 
 use App\Models\User;
 
