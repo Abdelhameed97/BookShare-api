@@ -51,6 +51,8 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('categories', CategoryController::class);
 });
+// Show all categories
+Route::get('/categories', [CategoryController::class, 'index']);
 
 // Public route to get libraries (owners only)
 Route::get('/libraries', function () {
