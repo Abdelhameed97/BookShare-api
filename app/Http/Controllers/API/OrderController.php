@@ -71,11 +71,13 @@ class OrderController extends Controller
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
             }
 
+            $validated = $request->validated();
+
             $groupedItems = [];
 
-            foreach ($request->items as $item) {
+            foreach ($validated['items'] as $item) {
                 $book = Book::findOrFail($item['book_id']);
-                $type = $item['type'] ?? 'buy';
+                $type = $item['type']; 
                 $ownerId = $book->user_id;
                 $unitPrice = $type === 'rent' ? $book->rental_price : $book->price;
 
