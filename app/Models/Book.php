@@ -26,6 +26,7 @@ class Book extends Model
     ];
 
     protected $casts = [
+        'quantity' => 'integer',
         'images' => 'array', // Laravel will handle the JSON <-> array conversion automatically
     ];
 
@@ -59,5 +60,5 @@ class Book extends Model
         return $this->hasMany(Rating::class);
     }
 
-    
+
 }
