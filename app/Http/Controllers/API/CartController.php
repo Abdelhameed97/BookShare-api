@@ -120,4 +120,16 @@ class CartController extends Controller
             'data' => $cart
         ]);
     }
+
+    public function checkStatus($bookId)
+    {
+        $cartItem = Cart::where('user_id', Auth::id())
+            ->where('book_id', $bookId)
+            ->first();
+
+        return response()->json([
+            'isInCart' => $cartItem !== null,
+            'cartItem' => $cartItem
+        ]);
+    }
 }
