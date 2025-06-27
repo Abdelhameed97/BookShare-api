@@ -133,7 +133,6 @@ class BookController extends Controller
      */
     public function show(Book $book)
     {
-    //show all the book details with user, category, comments and ratings
         $book = Book::find($book->id);
         if (!$book) {
             return response()->json([
@@ -141,9 +140,12 @@ class BookController extends Controller
                 'message' => 'Book not found'
             ], 404);
         }
+        // جلب التعليقات مع المستخدم والردود مع المستخدم
+        $comments = $book->comments()->with(['user', 'replies.user'])->whereNull('parent_id')->get();
+        $book->setRelation('comments', $comments);
         return response()->json([
             'status' => 'success',
-            'data' => $book->load(['user', 'category', 'comments', 'ratings'])
+            'data' => $book->load(['user', 'category', 'ratings'])
         ]);
     }
 

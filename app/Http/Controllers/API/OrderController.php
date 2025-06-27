@@ -48,10 +48,14 @@ class OrderController extends Controller
             $orders = $ordersQuery->latest()->get();
 
             if ($orders->isEmpty()) {
-                return response()->json(['success' => false, 'message' => 'No orders found'], 404);
+                return response()->json([
+                    'success' => true,
+                    'data' => [],
+                    'message' => 'No orders found'
+                ], 200);
             }
 
-            return response()->json(['success' => true, 'data' => $orders]);
+            return response()->json(['success' => true, 'data' => $orders], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
