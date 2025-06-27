@@ -28,7 +28,7 @@ class CategoryController extends Controller
      * Store a newly created category.
      */
     public function store(StoreCategoryRequest $request)
-    {
+    {        
 
         // Check if the user is an admin
         // This assumes you have a method isAdmin() in your User model
