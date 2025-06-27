@@ -208,29 +208,14 @@ class PaymentController extends Controller
     // PaymentController.php - Update authorization checks
     public function getOrderPayment($orderId)
     {
-        $user = Auth::user();
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Authentication required'
-            ], 401);
-        }
-
-        $order = Order::with(['user', 'payment'])->findOrFail($orderId);
-
-        if ($order->user_id !== $user->id && !$user->is_admin) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized to view this payment'
-            ], 403);
-        }
-
-        $payment = $order->payment;
+        $payment = Payment::where('order_id', $orderId)
+            ->with(['order', 'user'])
+            ->first();
 
         if (!$payment) {
             return response()->json([
                 'success' => false,
-                'message' => 'No payment found for this order'
+                'message' => 'Payment not found for this order'
             ], 404);
         }
 
