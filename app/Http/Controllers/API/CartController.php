@@ -87,13 +87,13 @@ class CartController extends Controller
     }
 
     // Update the quantity of an item in the cart
+    // في دالة update في CartController.php
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'quantity' => 'required|integer|min:1',
+            'quantity' => 'sometimes|integer|min:1',
+            'type' => 'sometimes|in:buy,rent'
         ]);
-
-        $quantity = $validated['quantity'];
 
         $cart = Cart::where('id', $id)
             ->where('user_id', Auth::id())
@@ -103,19 +103,20 @@ class CartController extends Controller
             return response()->json(['message' => 'Item not found in cart.'], 404);
         }
 
-        $book = Book::find($cart->book_id);
-        if ($book->quantity < $quantity) {
-            return response()->json([
-                'message' => 'The requested quantity is greater than available in stock.',
-                'available_quantity' => $book->quantity
-            ], 400);
+        if (isset($validated['quantity'])) {
+            $book = Book::find($cart->book_id);
+            if ($book->quantity < $validated['quantity']) {
+                return response()->json([
+                    'message' => 'The requested quantity is greater than available in stock.',
+                    'available_quantity' => $book->quantity
+                ], 400);
+            }
         }
 
-        $cart->quantity = $quantity;
-        $cart->save();
+        $cart->update($validated);
 
         return response()->json([
-            'message' => 'Quantity updated successfully.',
+            'message' => 'Cart updated successfully.',
             'data' => $cart
         ]);
     }
