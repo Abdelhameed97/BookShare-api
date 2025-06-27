@@ -26,6 +26,8 @@ use App\Http\Controllers\API\StripeWebhookController;
 use App\Notifications\TestEmailNotification;
 
 // use App\Http\Controllers\API\SocialAuthController;
+use App\Http\Controllers\API\Auth\PasswordResetController;
+
 // use social auth
 use Laravel\Socialite\Facades\Socialite;
 use App\Http\Controllers\SocialAuthController;
@@ -44,6 +46,10 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 });
+// Social Auth Routes
+Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLinkEmail']);
+Route::post('/reset-password', [PasswordResetController::class, 'reset']);
+
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('users', UserController::class);
