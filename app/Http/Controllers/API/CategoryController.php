@@ -19,27 +19,22 @@ class CategoryController extends Controller
         //     return response()->json(['message' => 'You are not authorized to view categories'], 403);
         // }
 
-     return response()->json([
+        return response()->json([
             'categories' => Category::all()
-           ], 200);
+        ], 200);
     }
 
     /**
      * Store a newly created category.
      */
     public function store(StoreCategoryRequest $request)
-<<<<<<< HEAD
     {
-        if (!auth()->user()->isAdmin()) {
-=======
-    {        
 
         // Check if the user is an admin
         // This assumes you have a method isAdmin() in your User model
         /** @var \App\Models\User $user */
         $user = $request->user();
         if (!$user->isAdmin()) {
->>>>>>> a99b543d0b39b43f1f5ea2d2d8131779e6bf51db
             return response()->json(['message' => 'You are not authorized to create categories'], 403);
         }
 

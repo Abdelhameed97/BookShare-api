@@ -14,19 +14,33 @@ use Illuminate\Support\Facades\Auth;
 
 class RatingController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $ratings = Rating::with(['book', 'reviewer', 'reviewedUser'])->get();
-            return response()->json(['success' => true, 'data' => $ratings]);
+            $query = Rating::with(['book', 'reviewer', 'reviewedUser']);
+
+            if ($request->has('book_id')) {
+                $query->where('book_id', $request->book_id);
+            }
+
+            $ratings = $query->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $ratings
+            ]);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to fetch ratings', 'error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch ratings',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
     public function store(StoreRatingRequest $request)
     {
-        $userId = Auth::id(); // Get current user ID
+        $userId = Auth::id();
         $book = Book::find($request->book_id);
 
         if (!$book) {
@@ -103,7 +117,7 @@ class RatingController extends Controller
         }
 
         // Check if the authenticated user is the reviewer or an admin
-        $user = auth()->user();
+        $user = Auth::user();
         if ($user->id !== $rating->reviewer_id && $user->role !== 'admin') {
             return response()->json([
                 'status' => 'error',
