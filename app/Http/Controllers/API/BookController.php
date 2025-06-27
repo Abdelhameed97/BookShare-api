@@ -15,7 +15,7 @@ class BookController extends Controller
      */
     public function index(Request $request)
 {
-    $query = Book::with(['user', 'category', 'comments', 'ratings']);
+    $query = Book::with(['user', 'category', 'comments', 'ratings.reviewer']);
 
     $filters = [];
 
@@ -73,7 +73,7 @@ class BookController extends Controller
     ]);
 }
 
-     
+
 
     /**
      * Store a newly created book.
@@ -232,9 +232,9 @@ class BookController extends Controller
                 'message' => 'Book not found'
             ], 404);
         }
-        
 
-      
+
+
         // Check if user owns the book
         if ($book->user_id !== Auth::id()) {
             return response()->json([
@@ -243,7 +243,7 @@ class BookController extends Controller
             ], 403);
         }
         //if the book_id is not found show message no book found
-        
+
 
         // Delete associated images
         if ($book->images) {
