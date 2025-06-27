@@ -58,4 +58,6 @@ class Book extends Model
     {
         return $this->hasMany(Rating::class);
     }
+
+    
 }
