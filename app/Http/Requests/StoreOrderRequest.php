@@ -18,6 +18,7 @@ class StoreOrderRequest extends FormRequest
             'items.*.book_id' => 'required|exists:books,id',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.type' => 'required|in:buy,rent',
+            'payment_method' => 'required|in:cash,stripe,paypal',
         ];
     }
 
@@ -33,7 +34,8 @@ class StoreOrderRequest extends FormRequest
             'items.*.quantity.integer' => 'Quantity must be an integer.',
             'items.*.quantity.min' => 'Quantity must be at least 1.',
             'items.*.type.required' => 'Purchase type (buy/rent) is required for each item.',
-            'items.*.type.in' => 'Purchase type must be either buy or rent.'
+            'items.*.type.in' => 'Purchase type must be either buy or rent.',
+            'payment_method.in' => 'Payment method must be one of: cash, card, stripe, or paypal.',
         ];
     }
 }

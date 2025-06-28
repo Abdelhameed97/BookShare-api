@@ -23,13 +23,14 @@ class CartController extends Controller
     {
         $validated = $request->validate([
             'book_id' => 'required|exists:books,id',
-            'type' => 'required|in:buy,rent',
+            'type' => 'sometimes|in:buy,rent', // Make type optional
             'quantity' => 'nullable|integer|min:1'
         ]);
 
         $userId = Auth::id();
         $book = Book::find($validated['book_id']);
         $requestedQuantity = $validated['quantity'] ?? 1;
+        $type = isset($validated['type']) && in_array($validated['type'], ['buy', 'rent']) ? $validated['type'] : 'buy';
 
         // Check available quantity
         if ($book->quantity < $requestedQuantity) {
@@ -43,7 +44,7 @@ class CartController extends Controller
         $existingCart = Cart::where([
             'user_id' => $userId,
             'book_id' => $validated['book_id'],
-            'type' => $validated['type']
+            'type' => $type
         ])->first();
 
         if ($existingCart) {
@@ -56,7 +57,7 @@ class CartController extends Controller
         $cart = Cart::create([
             'user_id' => $userId,
             'book_id' => $validated['book_id'],
-            'type' => $validated['type'],
+            'type' => $type,
             'quantity' => $requestedQuantity
         ]);
 
@@ -70,8 +71,8 @@ class CartController extends Controller
     public function destroy($id)
     {
         $cart = Cart::where('id', $id)
-                    ->where('user_id', Auth::id())
-                    ->first();
+            ->where('user_id', Auth::id())
+            ->first();
 
         if (!$cart) {
             return response()->json([
@@ -86,8 +87,7 @@ class CartController extends Controller
         ]);
     }
 
-    // Update the quantity of an item in the cart
-    // في دالة update في CartController.php
+    // Update the quantity or type of an item in the cart
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
@@ -111,9 +111,14 @@ class CartController extends Controller
                     'available_quantity' => $book->quantity
                 ], 400);
             }
+            $cart->quantity = (int)$validated['quantity'];
         }
 
-        $cart->update($validated);
+        if (isset($validated['type'])) {
+            $cart->type = $validated['type'];
+        }
+
+        $cart->save();
 
         return response()->json([
             'message' => 'Cart updated successfully.',
