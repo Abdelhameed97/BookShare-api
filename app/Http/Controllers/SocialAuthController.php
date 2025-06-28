@@ -13,17 +13,16 @@ use Illuminate\Support\Str;
 class SocialAuthController extends Controller
 {
     /**
-     * Step 1: Redirect user to the provider (Google, GitHub, etc.)
+     * Step 1: Redirect user to the provider (Google, LinkedIn, etc.)
      */
     public function redirectToProvider(Request $request, $provider)
     {
-        // Get role from the request (or use 'client' as default)
-        $role = $request->query('role', 'client');
+        // ✅ فقط خزّن الـ role في السيشن لو جاية من الريكوست (يعني تسجيل جديد فقط)
+        if ($request->has('role')) {
+            session(['social_role' => $request->query('role')]);
+        }
 
-        // Store the role in session temporarily
-        session(['social_role' => $role]);
-
-        // Redirect to provider login page
+        // ✅ روح يسجّل الدخول من مزوّد OAuth
         return Socialite::driver($provider)->redirect();
     }
 
@@ -33,17 +32,25 @@ class SocialAuthController extends Controller
     public function handleProviderCallback(Request $request, $provider)
     {
         try {
-            // Get user info from provider
+            // ✅ استرجع بيانات المستخدم من provider
             $socialUser = Socialite::driver($provider)->stateless()->user();
 
-            // Retrieve role from session or fallback to 'client'
-            $role = session('social_role', 'client');
+            // ✅ دور على يوزر بنفس الإيميل
+            $user = User::where('email', $socialUser->getEmail())->first();
 
-            // Create or update user based on email
-            $user = User::updateOrCreate(
-                ['email' => $socialUser->getEmail()],
-                [
+            if (!$user) {
+                // 🔥 لو مفيش role في السيشن معناها إنه جاي من login → ارجعه لاختيار الرول
+                if (!session()->has('social_role')) {
+                    $redirectGetStarted = env('FRONTEND_URL') . '/get-started';
+                    return redirect()->away($redirectGetStarted);
+                }
+
+                // ✅ المستخدم جديد وجاي من get-started → أنشئ حسابه
+                $role = session('social_role', 'client');
+
+                $user = User::create([
                     'name' => $socialUser->getName() ?? $socialUser->getNickname(),
+                    'email' => $socialUser->getEmail(),
                     'email_verified_at' => now(),
                     'role' => $role,
                     'password' => bcrypt(Str::random(12)),
@@ -51,26 +58,30 @@ class SocialAuthController extends Controller
                     'provider_id' => $socialUser->getId(),
                     'provider_token' => $socialUser->token ?? null,
                     'provider_refresh_token' => $socialUser->refreshToken ?? null,
-                ]
-            );
+                ]);
 
-            // If the user is newly created, create the related model
-            if ($user->wasRecentlyCreated) {
                 if ($role === 'client') {
                     Client::create(['user_id' => $user->id]);
                 } elseif ($role === 'owner') {
                     Owner::create(['user_id' => $user->id]);
                 }
+
+                // ✅ امسح الدور بتاع اليوزر من السيشن بعد ما استخدمناه
+                session()->forget('social_role');
+
+            } else {
+                // ✅ موجود بالفعل → استخرج الرول من الداتا بيز
+                $role = $user->role;
             }
 
-            // Log the user in
+            // ✅ سجل دخول المستخدم
             Auth::login($user);
 
-            // Create a Sanctum token
+            // ✅ أنشئ توكن
             $token = $user->createToken('auth_token')->plainTextToken;
 
-            // Redirect to frontend with token and role
-            $redirectUrl = env('FRONTEND_URL') . "/social-callback#token=$token&role=$role";
+            // ✅ ابني رابط الـ redirect للـ Frontend
+            $redirectUrl = env('FRONTEND_URL') . "/social-callback#token=$token&role={$role}";
 
             return redirect()->away($redirectUrl);
         } catch (\Exception $e) {

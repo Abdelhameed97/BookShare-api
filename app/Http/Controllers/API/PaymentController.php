@@ -7,11 +7,14 @@ use App\Http\Requests\StorePaymentRequest;
 use App\Http\Requests\UpdatePaymentRequest;
 use App\Models\Order;
 use App\Models\Payment;
+use Illuminate\Http\Request;
+use Stripe\Stripe;
+use Stripe\PaymentIntent;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 class PaymentController extends Controller
 {
-    // Show all payments for the authenticated user
     public function index()
     {
         $user = Auth::user();
@@ -27,10 +30,9 @@ class PaymentController extends Controller
         ]);
     }
 
-    // Show a specific payment
     public function show($id)
     {
-        $payment = Payment::with(['order', 'user'])->find($id);
+        $payment = Payment::with(['order', 'user'])->findOrFail($id);
         $user = Auth::user();
 
         if ($payment->user_id !== $user->id && !$user->is_admin) {
@@ -43,22 +45,19 @@ class PaymentController extends Controller
         ]);
     }
 
-    // Store a new payment
     public function store(StorePaymentRequest $request)
     {
         try {
             $user = Auth::user();
             $order = Order::findOrFail($request->order_id);
 
-            // Authorization check
-            if ($order->client_id !== $user->id && !$user->is_admin) {
+            if (Gate::denies('create-payment', $order)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'You are not authorized to pay for this order.'
                 ], 403);
             }
 
-            // Validate order status
             if ($order->status !== 'accepted') {
                 return response()->json([
                     'success' => false,
@@ -66,7 +65,6 @@ class PaymentController extends Controller
                 ], 403);
             }
 
-            // Check if already paid
             if ($order->is_paid) {
                 return response()->json([
                     'success' => false,
@@ -74,30 +72,57 @@ class PaymentController extends Controller
                 ], 400);
             }
 
-            // Check for existing payment
-            if (Payment::where('order_id', $order->id)->exists()) {
+            $existingPayment = Payment::where('order_id', $order->id)->first();
+
+            if ($request->method === 'cash') {
+                if ($existingPayment) {
+                    $existingPayment->update([
+                        'method' => 'cash',
+                        'status' => 'paid',
+                        'user_id' => $user->id,
+                    ]);
+                    $payment = $existingPayment;
+                } else {
+                    $payment = Payment::create([
+                        'order_id' => $order->id,
+                        'user_id' => $user->id,
+                        'method' => 'cash',
+                        'amount' => $order->total_price,
+                        'status' => 'paid',
+                    ]);
+                }
+
+                $order->is_paid = true;
+                $order->save();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Cash payment recorded successfully.',
+                    'data' => $payment->load('order', 'user')
+                ]);
+            }
+
+            // Stripe or PayPal
+            if ($existingPayment) {
                 return response()->json([
                     'success' => false,
                     'message' => 'A payment already exists for this order.'
                 ], 400);
             }
 
-            // Create payment
             $payment = Payment::create([
                 'order_id' => $order->id,
                 'user_id' => $user->id,
                 'method' => $request->method,
                 'amount' => $order->total_price,
-                'status' => 'paid',
+                'status' => 'pending',
             ]);
-
-            // Mark order as paid
-            $order->is_paid = true;
-            $order->save();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Payment completed successfully.',
+                'message' => $request->method === 'stripe'
+                    ? 'Payment intent created. Please complete your payment.'
+                    : 'Redirecting to PayPal...',
                 'data' => $payment->load('order', 'user')
             ], 201);
         } catch (\Exception $e) {
@@ -109,7 +134,6 @@ class PaymentController extends Controller
         }
     }
 
-    // Update an existing payment
     public function update(UpdatePaymentRequest $request, $id)
     {
         try {
@@ -117,7 +141,7 @@ class PaymentController extends Controller
             $payment = Payment::findOrFail($id);
             $order = $payment->order;
 
-            if ($order->client_id !== $user->id && !$user->is_admin) {
+            if ($order->user_id !== $user->id && !$user->is_admin) {
                 return response()->json([
                     'success' => false,
                     'message' => 'You are not authorized to update this payment.'
@@ -138,18 +162,14 @@ class PaymentController extends Controller
                 ], 400);
             }
 
-            // Update payment
             $payment->update([
                 'method' => $request->method,
                 'status' => 'paid',
                 'user_id' => $user->id,
             ]);
 
-            // Mark order as paid
             $order->is_paid = true;
             $order->save();
-
-            $payment->refresh();
 
             return response()->json([
                 'success' => true,
@@ -165,7 +185,6 @@ class PaymentController extends Controller
         }
     }
 
-    // Delete a payment (admin only)
     public function destroy($id)
     {
         $payment = Payment::findOrFail($id);
@@ -186,39 +205,124 @@ class PaymentController extends Controller
         ]);
     }
 
-    // Get payment for specific order
+    // PaymentController.php - Update authorization checks
     public function getOrderPayment($orderId)
     {
-        $order = Order::find($orderId);
-
-        if (!$order) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Order not found'
-            ], 404);
-        }
-
-        $user = Auth::user();
-
-        if ($order->client_id !== $user->id && !$user->is_admin) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized access'
-            ], 403);
-        }
-
-        $payment = Payment::where('order_id', $orderId)->first();
+        $payment = Payment::where('order_id', $orderId)
+            ->with(['order', 'user'])
+            ->first();
 
         if (!$payment) {
             return response()->json([
                 'success' => false,
-                'message' => 'No payment found for this order'
+                'message' => 'Payment not found for this order'
             ], 404);
         }
 
         return response()->json([
             'success' => true,
-            'data' => $payment->load('order', 'user')
+            'data' => $payment
         ]);
+    }
+
+    public function createStripePaymentIntent(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            $order = Order::findOrFail($request->order_id);
+
+            if ($order->client_id !== $user->id && !$user->is_admin) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You are not authorized to pay for this order.'
+                ], 403);
+            }
+
+            if ($order->status !== 'accepted') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payment is only allowed for accepted orders.'
+                ], 403);
+            }
+
+            if ($order->is_paid) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This order has already been paid.'
+                ], 400);
+            }
+
+            Stripe::setApiKey(config('services.stripe.secret'));
+
+            $intent = PaymentIntent::create([
+                'amount' => $order->total_price * 100,
+                'currency' => 'usd',
+                'metadata' => [
+                    'order_id' => $order->id,
+                    'user_id' => $user->id,
+                ],
+            ]);
+
+            $payment = Payment::updateOrCreate(
+                ['order_id' => $order->id],
+                [
+                    'user_id' => $user->id,
+                    'method' => 'stripe',
+                    'amount' => $order->total_price,
+                    'status' => 'pending',
+                    'stripe_payment_id' => $intent->id,
+                ]
+            );
+
+            return response()->json([
+                'success' => true,
+                'clientSecret' => $intent->client_secret,
+                'payment' => $payment
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create Stripe payment intent.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function confirmStripePayment(Request $request)
+    {
+        try {
+            $paymentIntentId = $request->payment_intent_id;
+            $payment = Payment::where('stripe_payment_id', $paymentIntentId)->firstOrFail();
+
+            Stripe::setApiKey(config('services.stripe.secret'));
+
+            $intent = PaymentIntent::retrieve($paymentIntentId);
+
+            if ($intent->status !== 'succeeded') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payment not completed yet.',
+                    'stripe_status' => $intent->status
+                ], 400);
+            }
+
+            $payment->update(['status' => 'paid']);
+
+            $order = $payment->order;
+            $order->is_paid = true;
+            $order->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Payment confirmed successfully.',
+                'payment' => $payment
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to confirm Stripe payment.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

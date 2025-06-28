@@ -23,8 +23,8 @@ return new class extends Migration
             $table->string('location')->nullable();
             $table->string('provider')->nullable();
             $table->string('provider_id')->nullable();
-            $table->string('provider_token')->nullable();
-            $table->string('provider_refresh_token')->nullable();
+            $table->text('provider_token')->nullable();
+            $table->text('provider_refresh_token')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

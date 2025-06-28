@@ -20,9 +20,14 @@ use App\Http\Controllers\OrderItemController;
 
 use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\PaymentController;
+use App\Http\Controllers\API\PayPalPaymentController;
+use App\Http\Controllers\API\StripePaymentController;
+use App\Http\Controllers\API\StripeWebhookController;
 use App\Notifications\TestEmailNotification;
 
 // use App\Http\Controllers\API\SocialAuthController;
+use App\Http\Controllers\API\Auth\PasswordResetController;
+
 // use social auth
 use Laravel\Socialite\Facades\Socialite;
 use App\Http\Controllers\SocialAuthController;
@@ -41,6 +46,13 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 });
+// Social Auth Routes
+
+Route::prefix('auth')->group(function () {
+    Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLinkEmail']);
+    Route::post('/reset-password', [PasswordResetController::class, 'reset']);
+});
+
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('users', UserController::class);
@@ -131,6 +143,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/cart', [CartController::class, 'store']);
     Route::put('/cart/{id}', [CartController::class, 'update']);
     Route::delete('/cart/{id}', [CartController::class, 'destroy']);
+    Route::get('/cart/check/{bookId}', [CartController::class, 'checkStatus']);
 });
 
 // Order
@@ -186,8 +199,27 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders/{order}/payment', [PaymentController::class, 'getOrderPayment']);
     Route::post('/payments/{payment}/verify', [PaymentController::class, 'verify']);
     Route::post('/payments/{payment}/refund', [PaymentController::class, 'refund']);
+    // Stripe Payment Routes
+    Route::post('/stripe/create-payment-intent', [StripePaymentController::class, 'createPaymentIntent']);
+    Route::post('/stripe/confirm-payment', [StripePaymentController::class, 'confirmPayment']);
+    // PayPal Payment Routes
+    Route::post('/paypal/create-payment', [PayPalPaymentController::class, 'createPayment']);
+    Route::get('/paypal/success/{payment}', [PayPalPaymentController::class, 'success'])->name('paypal.success');
+    Route::get('/paypal/cancel/{payment}', [PayPalPaymentController::class, 'cancel'])->name('paypal.cancel');
 });
 
-Route::get('/admin/stats', [AdminController::class, 'stats']);
+// Stripe Webhook Route
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handleWebhook']);
+
+// PayPal Webhook Route
+Route::post('/paypal/webhook', [PayPalPaymentController::class, 'webhook']);
 
 
+
+
+// ...existing code...
+Route::middleware('auth:sanctum')->group(
+    function () {
+        Route::apiResource('/order-items', OrderItemController::class);
+    }
+);

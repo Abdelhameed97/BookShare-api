@@ -19,9 +19,9 @@ class CategoryController extends Controller
         //     return response()->json(['message' => 'You are not authorized to view categories'], 403);
         // }
 
-     return response()->json([
+        return response()->json([
             'categories' => Category::all()
-           ], 200);
+        ], 200);
     }
 
     /**

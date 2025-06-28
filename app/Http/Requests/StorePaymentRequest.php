@@ -24,7 +24,7 @@ class StorePaymentRequest extends FormRequest
 
         return [
             'order_id' => 'required|exists:orders,id',
-            'method' => 'required|in:cash,card',
+            'method' => 'required|in:cash,card,stripe,paypal',
         ];
     }
 
