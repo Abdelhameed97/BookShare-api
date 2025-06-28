@@ -47,8 +47,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 });
 // Social Auth Routes
-Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLinkEmail']);
-Route::post('/reset-password', [PasswordResetController::class, 'reset']);
+
+Route::prefix('auth')->group(function () {
+    Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLinkEmail']);
+    Route::post('/reset-password', [PasswordResetController::class, 'reset']);
+});
 
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -210,3 +213,13 @@ Route::post('/stripe/webhook', [StripeWebhookController::class, 'handleWebhook']
 
 // PayPal Webhook Route
 Route::post('/paypal/webhook', [PayPalPaymentController::class, 'webhook']);
+
+
+
+
+// ...existing code...
+Route::middleware('auth:sanctum')->group(
+    function () {
+        Route::apiResource('/order-items', OrderItemController::class);
+    }
+);
