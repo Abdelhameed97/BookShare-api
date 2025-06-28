@@ -13,7 +13,7 @@ class Category extends Model
     use HasFactory;
     protected $fillable = [
         'name',
-        'type',
+        'description',
     ];
 
     //  Relationship: A category has many books
