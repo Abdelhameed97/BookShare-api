@@ -113,7 +113,8 @@ class OrderController extends Controller
                     'owner_id' => $ownerId,
                     'total_price' => $totalPrice,
                     'quantity' => $totalQuantity,
-                    'status' => 'pending'
+                    'status' => 'pending',
+                    'payment_method' => $validated['payment_method'] ?? 'cash',
                 ]);
 
                 foreach ($items as $item) {
