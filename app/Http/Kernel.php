@@ -9,8 +9,7 @@ class Kernel extends HttpKernel
 {
     protected $middlewareGroups = [
         'api' => [
-            // ❌ شيل EnsureFrontendRequestsAreStateful لو مش بتستخدم كوكيز
-            // 'EnsureFrontendRequestsAreStateful::class',
+            EnsureFrontendRequestsAreStateful::class,
             'throttle:api',
             SubstituteBindings::class,
         ],
