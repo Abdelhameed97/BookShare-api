@@ -81,7 +81,7 @@ class OrderController extends Controller
 
             foreach ($validated['items'] as $item) {
                 $book = Book::findOrFail($item['book_id']);
-                $type = $item['type']; 
+                $type = $item['type'];
                 $ownerId = $book->user_id;
                 $unitPrice = $type === 'rent' ? $book->rental_price : $book->price;
 
@@ -113,7 +113,8 @@ class OrderController extends Controller
                     'owner_id' => $ownerId,
                     'total_price' => $totalPrice,
                     'quantity' => $totalQuantity,
-                    'status' => 'pending'
+                    'status' => 'pending',
+                    'payment_method' => $validated['payment_method'] ?? 'cash',
                 ]);
 
                 foreach ($items as $item) {
@@ -236,12 +237,10 @@ class OrderController extends Controller
 
             DB::beginTransaction();
 
-            if (in_array($order->status, ['pending', 'processing'])) {
-                foreach ($order->orderItems as $item) {
-                    if ($item->book) {
-                        $item->book->quantity += $item->quantity;
-                        $item->book->save();
-                    }
+            foreach ($order->orderItems as $item) {
+                if ($item->book) {
+                    $item->book->quantity += $item->quantity;
+                    $item->book->save();
                 }
             }
 
@@ -252,7 +251,7 @@ class OrderController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Order cancelled successfully and stock restored if applicable.'
+                'message' => 'Order cancelled successfully and quantities restored.'
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -264,7 +263,6 @@ class OrderController extends Controller
             ], 500);
         }
     }
-
 
     public function ownerOrders(Request $request)
     {
@@ -310,4 +308,6 @@ class OrderController extends Controller
 
         return response()->json(['success' => true, 'message' => 'Order rejected']);
     }
+
+
 }

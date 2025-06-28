@@ -26,7 +26,7 @@ return new class extends Migration
                 'delivered',
                 'cancelled'
             ])->default('pending');
-            $table->enum('payment_method', ['cash', 'card'])->default('cash');
+            $table->enum('payment_method', ['cash', 'stripe', 'paypal'])->default('cash');
             $table->boolean('is_paid')->default(false);
             $table->timestamps();
         });
