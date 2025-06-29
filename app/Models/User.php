@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
 use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
-
+use App\Models\Cart;
 
 
 class User extends Authenticatable implements MustVerifyEmail, CanResetPassword
@@ -139,4 +139,13 @@ class User extends Authenticatable implements MustVerifyEmail, CanResetPassword
         $this->notify(new ResetPasswordNotification($token));
     }
 
+    public function carts()
+    {
+        return $this->hasMany(Cart::class);
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class, 'client_id');
+    }
 }

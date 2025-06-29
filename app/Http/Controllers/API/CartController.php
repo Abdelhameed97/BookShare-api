@@ -2,48 +2,56 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Controller;
 use App\Models\Cart;
 use App\Models\Book;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 
 class CartController extends Controller
 {
-    // Display cart contents
     public function index()
     {
-        return Cart::with('book')
+        $cartItems = Cart::with('book')
             ->where('user_id', Auth::id())
-            ->get();
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'book_id' => $item->book_id,
+                    'type' => $item->type,
+                    'quantity' => $item->quantity,
+                    'book' => $item->book,
+                    'price' => $item->type === 'rent' ? $item->book->rental_price : $item->book->price
+                ];
+            });
+
+        return response()->json($cartItems);
     }
 
-    // Add a book to the cart
     public function store(Request $request)
     {
         $validated = $request->validate([
             'book_id' => 'required|exists:books,id',
-            'type' => 'sometimes|in:buy,rent', // Make type optional
+            'type' => 'sometimes|in:buy,rent',
             'quantity' => 'nullable|integer|min:1'
         ]);
 
-        $userId = Auth::id();
+        $user = Auth::user();
         $book = Book::find($validated['book_id']);
-        $requestedQuantity = $validated['quantity'] ?? 1;
-        $type = isset($validated['type']) && in_array($validated['type'], ['buy', 'rent']) ? $validated['type'] : 'buy';
+        $type = $validated['type'] ?? 'buy';
+        $quantity = $validated['quantity'] ?? 1;
 
-        // Check available quantity
-        if ($book->quantity < $requestedQuantity) {
+        if ($book->quantity < $quantity) {
             return response()->json([
                 'message' => 'The requested quantity is greater than available in stock.',
                 'available_quantity' => $book->quantity
             ], 400);
         }
 
-        // Check if the item already exists in the cart
         $existingCart = Cart::where([
-            'user_id' => $userId,
-            'book_id' => $validated['book_id'],
+            'user_id' => $user->id,
+            'book_id' => $book->id,
             'type' => $type
         ])->first();
 
@@ -53,21 +61,19 @@ class CartController extends Controller
             ], 409);
         }
 
-        // Add to cart
         $cart = Cart::create([
-            'user_id' => $userId,
-            'book_id' => $validated['book_id'],
+            'user_id' => $user->id,
+            'book_id' => $book->id,
             'type' => $type,
-            'quantity' => $requestedQuantity
+            'quantity' => $quantity
         ]);
 
         return response()->json([
             'message' => 'Added to cart successfully.',
-            'data' => $cart
+            'data' => $cart->load('book')
         ], 201);
     }
 
-    // Delete an item from the cart
     public function destroy($id)
     {
         $cart = Cart::where('id', $id)
@@ -87,7 +93,6 @@ class CartController extends Controller
         ]);
     }
 
-    // Update the quantity or type of an item in the cart
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
@@ -119,6 +124,11 @@ class CartController extends Controller
         }
 
         $cart->save();
+
+        // نحسب السعر وقت العرض فقط
+        $book = Book::find($cart->book_id);
+        $cart->price = ($cart->type === 'rent' ? $book->rental_price : $book->price) * 1.10;
+        $cart->original_price = $cart->type === 'rent' ? $book->rental_price : $book->price;
 
         return response()->json([
             'message' => 'Cart updated successfully.',

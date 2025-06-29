@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('genre')->nullable();
             $table->string('status')->default('available');
             $table->json('images')->nullable();
+            $table->decimal('tax', 10, 2)->default(0);
             $table->timestamps();
         });
     }

@@ -12,7 +12,7 @@ use App\Models\User;
 use App\Models\Book;
 use App\Models\Order;
 use App\Models\OrderItem;
-
+use App\Models\Coupon;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
 use App\Mail\OrderCreatedNotification;
@@ -35,7 +35,7 @@ class OrderController extends Controller
                 'orderItems.book:id,title,price,rental_price',
                 'client:id,name',
                 'owner:id,name'
-            ])->select('id', 'status', 'total_price', 'client_id', 'owner_id', 'created_at');
+            ])->select('id', 'status', 'total_price', 'client_id', 'owner_id', 'created_at', 'shipping_fee', 'tax', 'discount');
 
             if ($user->role === 'owner') {
                 $ordersQuery->where('owner_id', $user->id);
@@ -71,19 +71,22 @@ class OrderController extends Controller
 
         try {
             $user = Auth::user();
-            if (!$user) {
-                return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
-            }
-
             $validated = $request->validated();
 
             $groupedItems = [];
+            $shippingFee = 25;
+            $subtotal = 0;
+            $totalTax = 0;
 
             foreach ($validated['items'] as $item) {
                 $book = Book::findOrFail($item['book_id']);
                 $type = $item['type'];
                 $ownerId = $book->user_id;
                 $unitPrice = $type === 'rent' ? $book->rental_price : $book->price;
+
+                // حساب الضريبة 10%
+                $tax = $unitPrice * 0.10 * $item['quantity'];
+                $totalTax += $tax;
 
                 if (!isset($groupedItems[$ownerId])) {
                     $groupedItems[$ownerId] = [];
@@ -93,28 +96,56 @@ class OrderController extends Controller
                     'book_id' => $book->id,
                     'quantity' => $item['quantity'],
                     'type' => $type,
-                    'unit_price' => $unitPrice
+                    'unit_price' => $unitPrice,
+                    'tax' => $tax
                 ];
+
+                $subtotal += $unitPrice * $item['quantity'];
             }
+
+            // إلغاء الشحن إذا تجاوز الإجمالي 200
+            if ($subtotal > 200) {
+                $shippingFee = 0;
+            }
+
+            // حساب الخصم إذا وجد
+            $discount = 0;
+            if (isset($validated['coupon_code'])) {
+                $coupon = Coupon::where('code', $validated['coupon_code'])
+                    ->where('expires_at', '>', now())
+                    ->first();
+
+                if ($coupon) {
+                    $discount = $coupon->type === 'fixed' ?
+                        $coupon->value : ($subtotal * $coupon->value / 100);
+                    $coupon->increment('used_count');
+                }
+            }
+
+            $total = $subtotal + $totalTax + $shippingFee - $discount;
 
             $orders = [];
 
             foreach ($groupedItems as $ownerId => $items) {
-                $totalPrice = 0;
-                $totalQuantity = 0;
+                $orderQuantity = 0;
+                $orderTax = 0;
 
                 foreach ($items as $item) {
-                    $totalPrice += $item['unit_price'] * $item['quantity'];
-                    $totalQuantity += $item['quantity'];
+                    $orderQuantity += $item['quantity'];
+                    $orderTax += $item['tax'];
                 }
 
                 $order = Order::create([
                     'client_id' => $user->id,
                     'owner_id' => $ownerId,
-                    'total_price' => $totalPrice,
-                    'quantity' => $totalQuantity,
+                    'total_price' => $total,
+                    'quantity' => $orderQuantity,
                     'status' => 'pending',
-                    'payment_method' => $validated['payment_method'] ?? 'cash',
+                    'payment_method' => $validated['payment_method'],
+                    'shipping_fee' => $shippingFee,
+                    'tax' => $orderTax,
+                    'discount' => $discount,
+                    'coupon_code' => $validated['coupon_code'] ?? null
                 ]);
 
                 foreach ($items as $item) {
@@ -131,21 +162,19 @@ class OrderController extends Controller
                     $book->quantity -= $item['quantity'];
                     $book->save();
 
-                    $order->orderItems()->create([
+                    OrderItem::create([
+                        'order_id' => $order->id,
                         'book_id' => $book->id,
                         'quantity' => $item['quantity'],
-                        'type' => $item['type'],
+                        'type' => $item['type']
                     ]);
                 }
 
-                $owner = User::find($ownerId);
-                if ($owner) {
-                    $order->load('orderItems.book', 'client');
-                    $owner->notify(new OrderPlacedNotification($order));
-                    Mail::to($owner->email)->send(new OrderCreatedNotification($order));
-                }
-
                 $orders[] = $order->load('orderItems.book');
+            }
+
+            if ($validated['clear_cart'] ?? false) {
+                $user->carts()->delete();
             }
 
             DB::commit();

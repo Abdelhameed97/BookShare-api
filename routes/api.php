@@ -33,7 +33,7 @@ use Laravel\Socialite\Facades\Socialite;
 use App\Http\Controllers\SocialAuthController;
 
 use App\Http\Controllers\AdminController;
-
+use App\Http\Controllers\API\CouponController;
 use App\Models\User;
 
 
@@ -157,7 +157,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // RESTful Routes
     Route::apiResource('orders', OrderController::class);
-
 });
 
 
@@ -214,12 +213,14 @@ Route::post('/stripe/webhook', [StripeWebhookController::class, 'handleWebhook']
 // PayPal Webhook Route
 Route::post('/paypal/webhook', [PayPalPaymentController::class, 'webhook']);
 
-
-
-
 // ...existing code...
 Route::middleware('auth:sanctum')->group(
     function () {
         Route::apiResource('/order-items', OrderItemController::class);
     }
 );
+
+// Coupons Route
+Route::prefix('coupons')->group(function () {
+    Route::post('apply', [CouponController::class, 'apply']);
+});
