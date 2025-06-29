@@ -24,6 +24,9 @@ class CommentController extends Controller
         ]);
 
         $comment = Comment::create($data);
+        
+        // Load the user relationship
+        $comment->load('user');
 
         return response()->json($comment, 201);
     }
