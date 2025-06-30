@@ -8,7 +8,7 @@ class StoreCategoryRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // 
+        return true;
     }
 
     public function rules(): array
@@ -24,10 +24,7 @@ class StoreCategoryRequest extends FormRequest
         return [
             'name.required' => 'The name field is required.',
             'name.unique' => 'This category name is already taken.',
-            'type.string' => 'The type must be a string.',
-            'type.max' => 'The type must not exceed 255 characters.',
-            'type.required' => 'The type field is required.',
+            'type.required' => 'The type field is required.'
         ];
     }
 }
-

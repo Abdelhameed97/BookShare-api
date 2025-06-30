@@ -35,6 +35,7 @@ use App\Http\Controllers\SocialAuthController;
 use App\Http\Controllers\AdminController;
 
 use App\Models\User;
+use App\Http\Controllers\BookAiSearchController;
 
 
 Route::get('/user', function (Request $request) {
@@ -60,11 +61,16 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
 //category
-Route::middleware('auth:sanctum')->group(function () {
-    Route::apiResource('categories', CategoryController::class);
-});
-// Show all categories
+// Public category routes (index and show)
 Route::get('/categories', [CategoryController::class, 'index']);
+Route::get('/categories/{category}', [CategoryController::class, 'show']);
+
+// Protected category routes (create, update, delete)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/categories', [CategoryController::class, 'store']);
+    Route::put('/categories/{category}', [CategoryController::class, 'update']);
+    Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
+});
 
 // Public route to get libraries (owners only)
 Route::get('/libraries', function () {
@@ -214,12 +220,13 @@ Route::post('/stripe/webhook', [StripeWebhookController::class, 'handleWebhook']
 // PayPal Webhook Route
 Route::post('/paypal/webhook', [PayPalPaymentController::class, 'webhook']);
 
+// query route for RagChat.jsx frontend
+Route::post('/query', [BookAiSearchController::class, 'search']);
+// إضافة مسار ai-search كما في ai.php
+Route::post('/ai-search', [BookAiSearchController::class, 'search']);
+// إذا أردت دعم chat-messages أيضاً:
+Route::post('/chat-messages', [BookAiSearchController::class, 'search']);
+// endpoint لجلب رسائل الدردشة حسب session_id
+Route::get('/chat-messages/{session_id}', [BookAiSearchController::class, 'history']);
 
-
-
-// ...existing code...
-Route::middleware('auth:sanctum')->group(
-    function () {
-        Route::apiResource('/order-items', OrderItemController::class);
-    }
-);
+require base_path('routes/ai.php');

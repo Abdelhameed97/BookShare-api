@@ -21,6 +21,8 @@ class Book extends Model
         'educational_level',
         'genre',
         'status',
+        'author', // تمت إضافته
+        'content', // تمت إضافته
         'images',
         'quantity',
     ];
