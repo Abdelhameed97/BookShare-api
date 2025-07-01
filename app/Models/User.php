@@ -166,17 +166,17 @@ class User extends Authenticatable implements MustVerifyEmail, CanResetPassword
     /**
      * Send the email verification link using a custom Mailable.
      */
-    public function sendEmailVerificationNotification()
-    {
-        $verifyUrl = URL::temporarySignedRoute(
-            'verification.verify',
-            Carbon::now()->addMinutes(Config::get('auth.verification.expire', 60)),
-            [
-                'id' => $this->id,
-                'hash' => sha1($this->email),
-            ]
-        );
+    // public function sendEmailVerificationNotification()
+    // {
+    //     $verifyUrl = URL::temporarySignedRoute(
+    //         'verification.verify',
+    //         Carbon::now()->addMinutes(Config::get('auth.verification.expire', 60)),
+    //         [
+    //             'id' => $this->id,
+    //             'hash' => sha1($this->email),
+    //         ]
+    //     );
 
-        Mail::to($this->email)->send(new VerifyEmailCustom($this, $verifyUrl));
-    }
+    //     Mail::to($this->email)->send(new VerifyEmailCustom($this, $verifyUrl));
+    // }
 }

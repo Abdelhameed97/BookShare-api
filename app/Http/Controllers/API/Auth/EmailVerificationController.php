@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Carbon;
+use Illuminate\Auth\Events\Verified;
+
 
 // Import the custom email verification Mailable
 use App\Http\Controllers\Controller;
@@ -22,20 +24,31 @@ class EmailVerificationController extends Controller
     /**
      * ✅ تأكيد البريد لما المستخدم يضغط على اللينك اللي في الإيميل
      */
-    public function verify(EmailVerificationRequest $request)
+    public function verify(Request $request)
     {
-        $request->fulfill(); // يقوم بتحديد verified_at للمستخدم
+        $user = User::findOrFail($request->route('id'));
 
-        // تسجيل الدخول تلقائيًا
-        $user = $request->user();
-        Auth::login($user); // مهم علشان نقدر ننشئ التوكن
+        if (!hash_equals((string) $request->route('hash'), sha1($user->getEmailForVerification()))) {
+            return response()->json(['message' => 'Invalid verification link.'], 403);
+        }
 
-        // إصدار التوكن
-        $token = $user->createToken('bookshare-token')->plainTextToken;
+        if ($user->hasVerifiedEmail()) {
+            // ✅ لو الإيميل مفعل بالفعل، نرجع توكن جديد
+            $token = $user->createToken('auth_token')->plainTextToken;
+            return redirect()->away(env('FRONTEND_URL') . "/email-verified?token={$token}");
+        }
 
-        // تحويل للفرونت إند مع التوكن في URL
-        return redirect(env('FRONTEND_URL') . '/email-verified?token=' . $token);
+        $user->markEmailAsVerified();
+        event(new Verified($user));
+
+        // ✅ أنشئ توكن جديد بعد التفعيل
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        // ✅ أرجع للفرونت ومعاك التوكن
+        return redirect()->away(env('FRONTEND_URL') . "/email-verified?token={$token}");
     }
+
+
 
     /**
      * ✅ إعادة إرسال رابط التفعيل في حالة عدم تأكيد البريد
@@ -70,6 +83,8 @@ class EmailVerificationController extends Controller
             return response()->json(['message' => 'Email already verified.'], 200);
         }
 
+        // ✳️ استخدم Notification الأصلية
+        // $user->sendEmailVerificationNotification();
         $verifyUrl = URL::temporarySignedRoute(
             'verification.verify',
             now()->addMinutes(60),
@@ -77,6 +92,7 @@ class EmailVerificationController extends Controller
         );
 
         Mail::to($user->email)->send(new VerifyEmailCustom($user, $verifyUrl));
+
 
         return response()->json(['message' => 'Verification email sent successfully.'], 200);
     }

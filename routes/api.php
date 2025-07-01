@@ -26,6 +26,9 @@ use App\Http\Controllers\SocialAuthController;
 
 use App\Models\User;
 
+
+
+
 // Public routes
 // ============================
 // 🔐 Auth Routes
@@ -51,7 +54,7 @@ Route::get('/books/{book}', [BookController::class, 'show']);
 
 // ✅ 1. المستخدم بيدوس على اللينك اللي وصله في الإيميل
 Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
-    ->middleware(['auth:sanctum', 'signed'])
+    ->middleware(['signed']) // ممكن تضيف 'throttle:6,1' لو حبيت
     ->name('verification.verify');
 
 // ✅ 2. إعادة إرسال رابط التفعيل
@@ -67,6 +70,13 @@ Route::middleware(['auth:sanctum', 'verified'])->get('/protected', function () {
     return response()->json(['message' => 'You are verified!']);
 });
 // ============================
+
+
+// ✅ هذا الراوت بيرجع بيانات المستخدم الحالي لو معاه توكن
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+    return $request->user();
+});
+
 
 // Authenticated routes
 Route::middleware('auth:sanctum')->group(function () {

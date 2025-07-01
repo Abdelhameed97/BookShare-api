@@ -48,7 +48,7 @@ class AuthServiceProvider extends ServiceProvider
         // ✅ تخصيص رابط تحقق الإيميل
 
         VerifyEmail::createUrlUsing(function ($notifiable) {
-            $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
+            $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
 
             // ⏳ رابط التحقق الأساسي من Laravel
             $verifyUrl = URL::temporarySignedRoute(
@@ -64,7 +64,7 @@ class AuthServiceProvider extends ServiceProvider
             $token = $notifiable->createToken('email-verification')->plainTextToken;
 
             // 🧭 دمج رابط التحقق مع التوكن للفرونت إند
-            return $frontendUrl . '/verify-email?' . parse_url($verifyUrl, PHP_URL_QUERY) . '&token=' . $token;
+            return $frontendUrl . '/email-verified?' . parse_url($verifyUrl, PHP_URL_QUERY) . '&token=' . $token;
         });
 
     }

@@ -5,21 +5,20 @@ namespace App\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Support\HtmlString;
-
 
 class VerifyEmailCustom extends Mailable
 {
     use Queueable, SerializesModels;
 
     public $user;
-    public $verificationUrl;
+    public $verifyUrl;
 
-    public function __construct($user, $verificationUrl)
+    public function __construct($user, $verifyUrl)
     {
         $this->user = $user;
-        $this->verificationUrl = $verificationUrl;
+
+        // ✅ نبعته مباشرة للباك إند، و Laravel هيتولى باقي العملية (fulfill, token, redirect)
+        $this->verifyUrl = $verifyUrl;
     }
 
     public function build()
@@ -28,7 +27,7 @@ class VerifyEmailCustom extends Mailable
                     ->view('emails.verify')
                     ->with([
                         'user' => $this->user,
-                        'url' => $this->verificationUrl,
+                        'url' => $this->verifyUrl,
                     ]);
     }
 }
