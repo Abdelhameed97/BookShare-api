@@ -224,9 +224,5 @@ Route::post('/paypal/webhook', [PayPalPaymentController::class, 'webhook']);
 Route::post('/query', [BookAiSearchController::class, 'search']);
 // إضافة مسار ai-search كما في ai.php
 Route::post('/ai-search', [BookAiSearchController::class, 'search']);
-// إذا أردت دعم chat-messages أيضاً:
-Route::post('/chat-messages', [BookAiSearchController::class, 'search']);
-// endpoint لجلب رسائل الدردشة حسب session_id
-Route::get('/chat-messages/{session_id}', [BookAiSearchController::class, 'history']);
 
 require base_path('routes/ai.php');
