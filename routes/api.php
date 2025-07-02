@@ -222,7 +222,6 @@ Route::post('/paypal/webhook', [PayPalPaymentController::class, 'webhook']);
 
 // query route for RagChat.jsx frontend
 Route::post('/query', [BookAiSearchController::class, 'search']);
-// إضافة مسار ai-search كما في ai.php
-Route::post('/ai-search', [BookAiSearchController::class, 'search']);
 
-require base_path('routes/ai.php');
+Route::post('/ai-search', [BookAiSearchController::class, 'search'])->name('ai.search');
+
