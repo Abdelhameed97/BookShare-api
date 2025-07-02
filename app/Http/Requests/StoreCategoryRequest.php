@@ -15,7 +15,7 @@ class StoreCategoryRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255|unique:categories,name',
-            'type' => 'required|string|max:255',
+            'type' => 'nullable|string|max:255',
         ];
     }
 
@@ -26,7 +26,6 @@ class StoreCategoryRequest extends FormRequest
             'name.unique' => 'This category name is already taken.',
             'type.string' => 'The type must be a string.',
             'type.max' => 'The type must not exceed 255 characters.',
-            'type.required' => 'The type field is required.',
         ];
     }
 }

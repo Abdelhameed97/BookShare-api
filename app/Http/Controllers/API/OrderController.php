@@ -205,7 +205,7 @@ class OrderController extends Controller
 
             $order->update(['status' => $request->status]);
 
-            $order->client->notify(new OrderStatusUpdatedNotification($order));
+            $order->client->notify(new OrderStatusUpdatedNotification($order, $request->status));
 
             return response()->json([
                 'success' => true,
@@ -290,6 +290,7 @@ class OrderController extends Controller
 
         $order->load('client', 'orderItems.book');
         $order->client->notify(new OrderStatusUpdatedNotification($order, 'accepted'));
+
 
         return response()->json(['success' => true, 'message' => 'Order accepted']);
     }

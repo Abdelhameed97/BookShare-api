@@ -14,7 +14,7 @@ class UpdateCategoryRequest extends FormRequest
     {
         return [
             'name' => 'sometimes|required|string|max:255|unique:categories,name,' . $this->route('category'),
-            'type' => 'sometimes|required|string|max:255',
+            'type' => 'sometimes|nullable|string|max:255',
         ];
     }
 
@@ -25,7 +25,6 @@ class UpdateCategoryRequest extends FormRequest
             'name.unique' => 'This category name is already taken.',
             'type.string' => 'The type must be a string.',
             'type.max' => 'The type must not exceed 255 characters.',
-            'type.required' => 'The type field is required.',
         ];
     }
 }

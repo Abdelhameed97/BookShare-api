@@ -34,11 +34,12 @@ class OrderStatusUpdatedNotification extends Notification
     {
         return (new MailMessage)
             ->subject('Your Order Has Been ' . ucfirst($this->status))
-            ->greeting('Hello ' . $notifiable->name)
-            ->line("Your order has been {$this->status}.")
-            ->line('Book: ' . $this->order->orderItems->first()->book->title)
-            ->action('View Orders', url('/orders'))
-            ->line('Thank you for using our service!');
+            ->view("emails.order_{$this->status}", [
+                'client' => $notifiable,
+                'order' => $this->order,
+                'book' => $this->order->orderItems->first()->book,
+            ]);
+
     }
 
     public function toArray($notifiable)
