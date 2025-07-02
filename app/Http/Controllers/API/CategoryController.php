@@ -41,7 +41,7 @@ class CategoryController extends Controller
         $validatedData = $request->validated();
         $category = Category::create([
             'name' => $validatedData['name'],
-            'description' => $validatedData['description'] ?? 'general',
+            'type' => $validatedData['type'] ?? 'general',
         ]);
 
         return response()->json([
@@ -86,7 +86,10 @@ class CategoryController extends Controller
         }
 
         $validatedData = $request->validated();
-        $category->update($validatedData);
+        $category->update([
+            'name' => $validatedData['name'] ?? $category->name,
+            'type' => $validatedData['type'] ?? $category->type,
+        ]);
 
         return response()->json([
             'message' => 'Category updated successfully.',
