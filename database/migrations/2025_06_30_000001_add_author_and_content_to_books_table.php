@@ -11,12 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('categories', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            // $table->text('description');
-            $table->string('type');
-            $table->timestamps(); // This will create `created_at` and `updated_at` automatically
+        Schema::table('books', function (Blueprint $table) {
+            $table->string('author')->nullable()->after('status');
+            $table->text('content')->nullable()->after('author');
         });
     }
 
@@ -25,6 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('categories');
+        Schema::table('books', function (Blueprint $table) {
+            $table->dropColumn(['author', 'content']);
+        });
     }
 };

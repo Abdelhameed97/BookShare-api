@@ -25,6 +25,7 @@ use App\Http\Controllers\API\Auth\EmailVerificationController;
 use App\Http\Controllers\SocialAuthController;
 
 use App\Models\User;
+use App\Http\Controllers\BookAiSearchController;
 
 
 
@@ -39,7 +40,24 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
 
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('users', UserController::class);
+});
+
+
+//category
+// Public category routes (index and show)
 Route::get('/categories', [CategoryController::class, 'index']);
+Route::get('/categories/{category}', [CategoryController::class, 'show']);
+
+// Protected category routes (create, update, delete)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/categories', [CategoryController::class, 'store']);
+    Route::put('/categories/{category}', [CategoryController::class, 'update']);
+    Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
+});
+
+// Public route to get libraries (owners only)
 Route::get('/libraries', function () {
     $owners = User::where('role', 'owner')->get();
     return response()->json(['success' => true, 'data' => $owners]);
@@ -85,9 +103,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // User management
     Route::apiResource('users', UserController::class);
-
-    // Categories
-    Route::apiResource('categories', CategoryController::class);
 
     // Comments
     Route::apiResource('comment', CommentController::class);
@@ -159,12 +174,8 @@ Route::prefix('auth')->group(function () {
 Route::get('/ratings', [RatingController::class, 'index']);
 Route::get('/ratings/{id}', [RatingController::class, 'show']);
 
-// Test Email
-Route::get('/test-email', function () {
-    Mail::raw('BookShare \uD83D\uDCDA\n    email sent successfully from BookShare \uD83D\uDCDA\ntime: ' . now() . '\n\nWith best regards, team BookShare', function ($message) {
-        $message->to('wwwrehabkamal601@gmail.com')
-            ->subject('test email \uD83C\uDF89    - BookShare');
-    });
+// query route for RagChat.jsx frontend
+Route::post('/query', [BookAiSearchController::class, 'search']);
 
-    return response()->json(['message' => 'Test email sent successfully! Check your inbox.']);
-});
+Route::post('/ai-search', [BookAiSearchController::class, 'search'])->name('ai.search');
+
