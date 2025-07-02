@@ -3,56 +3,41 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\CategoryController;
-// use App\Http\Controllers\API\BookController;
-
 use App\Http\Controllers\API\CommentController;
 use App\Http\Controllers\API\RatingController;
 use App\Http\Controllers\API\WishlistController;
 use App\Http\Controllers\API\CartController;
 use App\Http\Controllers\API\OrderController;
-
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\OrderItemController;
-
 use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\PaymentController;
 use App\Http\Controllers\API\PayPalPaymentController;
 use App\Http\Controllers\API\StripePaymentController;
 use App\Http\Controllers\API\StripeWebhookController;
-use App\Notifications\TestEmailNotification;
-
-// use App\Http\Controllers\API\SocialAuthController;
 use App\Http\Controllers\API\Auth\PasswordResetController;
-
-// use social auth
-use Laravel\Socialite\Facades\Socialite;
+use App\Http\Controllers\API\Auth\EmailVerificationController;
 use App\Http\Controllers\SocialAuthController;
-
-use App\Http\Controllers\AdminController;
 
 use App\Models\User;
 use App\Http\Controllers\BookAiSearchController;
 
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
 
+
+// Public routes
+// ============================
+// 🔐 Auth Routes
+// ============================
+
+// Register + Login
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
-});
-// Social Auth Routes
-
-Route::prefix('auth')->group(function () {
-    Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLinkEmail']);
-    Route::post('/reset-password', [PasswordResetController::class, 'reset']);
-});
 
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -75,158 +60,122 @@ Route::middleware('auth:sanctum')->group(function () {
 // Public route to get libraries (owners only)
 Route::get('/libraries', function () {
     $owners = User::where('role', 'owner')->get();
-    return response()->json([
-        'success' => true,
-        'data' => $owners
-    ]);
+    return response()->json(['success' => true, 'data' => $owners]);
 });
 
-// comment
-Route::apiResource('/comment', commentController::class)->middleware('auth:sanctum');
-
-
-// Ratings
-Route::get('/ratings', [RatingController::class, 'index']);
-Route::get('/ratings/{id}', [RatingController::class, 'show']);
-
-// Protected rating routes (require authentication)
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/ratings', [RatingController::class, 'store']);
-    Route::put('/ratings/{id}', [RatingController::class, 'update']);
-    Route::delete('/ratings/{id}', [RatingController::class, 'destroy']);
-});
-
-// Wishlist
-// Protected wishlist routes (require authentication)
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/wishlist', [WishlistController::class, 'index']);
-    Route::get('/wishlist/{id}', [WishlistController::class, 'show']);
-    Route::post('/wishlist', [WishlistController::class, 'store']);
-    Route::put('/wishlist/{id}', [WishlistController::class, 'update']);
-    Route::delete('/wishlist/{id}', [WishlistController::class, 'destroy']);
-    Route::post('/wishlist/{id}/move-to-cart', [WishlistController::class, 'moveToCart']);
-    Route::post('/wishlist/move-all-to-cart', [WishlistController::class, 'moveAllToCart']);
-});
-
-// Book routes
 Route::get('/books', [BookController::class, 'index']);
 Route::get('/books/{book}', [BookController::class, 'show']);
 
-// Protected book routes (require authentication)
+// ============================
+// 📧 Email Verification Routes
+// ============================
+
+// ✅ 1. المستخدم بيدوس على اللينك اللي وصله في الإيميل
+Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
+    ->middleware(['signed']) // ممكن تضيف 'throttle:6,1' لو حبيت
+    ->name('verification.verify');
+
+// ✅ 2. إعادة إرسال رابط التفعيل
+Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])
+    ->middleware(['auth:sanctum'])
+    ->name('verification.send');
+// ✅ 2.5 إعادة إرسال رابط التفعيل باستخدام الإيميل
+Route::post('/resend-verification-email-by-email', [EmailVerificationController::class, 'resendByEmail']);
+
+
+// ✅ 3. Test route لحماية الـ verified فقط
+Route::middleware(['auth:sanctum', 'verified'])->get('/protected', function () {
+    return response()->json(['message' => 'You are verified!']);
+});
+// ============================
+
+
+// ✅ هذا الراوت بيرجع بيانات المستخدم الحالي لو معاه توكن
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+    return $request->user();
+});
+
+
+// Authenticated routes
 Route::middleware('auth:sanctum')->group(function () {
+    // Auth
+    Route::post('/logout', [AuthController::class, 'logout']);
+
+    // User management
+    Route::apiResource('users', UserController::class);
+
+    // Comments
+    Route::apiResource('comment', CommentController::class);
+
+    // Ratings
+    Route::post('/ratings', [RatingController::class, 'store']);
+    Route::put('/ratings/{id}', [RatingController::class, 'update']);
+    Route::delete('/ratings/{id}', [RatingController::class, 'destroy']);
+
+    // Wishlist
+    Route::apiResource('wishlist', WishlistController::class);
+    Route::post('/wishlist/{id}/move-to-cart', [WishlistController::class, 'moveToCart']);
+    Route::post('/wishlist/move-all-to-cart', [WishlistController::class, 'moveAllToCart']);
+
+    // Books
     Route::post('/books', [BookController::class, 'store']);
     Route::put('/books/{id}', [BookController::class, 'update']);
     Route::delete('/books/{id}', [BookController::class, 'destroy']);
-});
 
-
-// Test route for email
-Route::get('/test-email', function () {
-    Mail::raw('BookShare 📚
-    email sent successfully from BookShare 📚
-time: ' . now() . '
-
-With best regards, team BookShare', function ($message) {
-        $message->to('wwwrehabkamal601@gmail.com')
-            ->subject('test email 🎉    - BookShare');
-    });
-
-    return response()->json(['message' => 'Test email sent successfully! Check your inbox.']);
-});
-
-// Route::get('/test-email', function () {
-//     $user = User::find(1); // Replace with the user's ID you want to send the email to
-//     $user->notify(new TestEmailNotification());
-//     return "Email sent!";
-// });
-
-Route::middleware('auth:sanctum')->get('/notifications', function (Request $request) {
-    return $request->user()->notifications;
-});
-
-Route::middleware('auth:sanctum')->group(function () {
+    // Cart
     Route::get('/cart', [CartController::class, 'index']);
     Route::post('/cart', [CartController::class, 'store']);
     Route::put('/cart/{id}', [CartController::class, 'update']);
     Route::delete('/cart/{id}', [CartController::class, 'destroy']);
     Route::get('/cart/check/{bookId}', [CartController::class, 'checkStatus']);
-});
 
-// Order
-Route::middleware('auth:sanctum')->group(function () {
-
-
-    // Extra custom actions
+    // Orders
     Route::get('orders/owner', [OrderController::class, 'ownerOrders']);
     Route::post('orders/{order}/accept', [OrderController::class, 'accept']);
     Route::post('orders/{order}/reject', [OrderController::class, 'reject']);
-
-    // RESTful Routes
     Route::apiResource('orders', OrderController::class);
 
-});
+    // Order Items
+    Route::apiResource('order-items', OrderItemController::class);
 
-
-// Order Items
-Route::middleware('auth:sanctum')->group(
-    function () {
-        Route::apiResource('/order-items', OrderItemController::class);
-    }
-);
-
-
-Route::middleware('auth:sanctum')->get('/my-notifications', function (Request $request) {
-    return response()->json([
-        'notifications' => $request->user()->notifications,
-    ]);
-});
-
-Route::middleware('auth:sanctum')->group(function () {
-
-    // كل الإشعارات (مقروءة وغير مقروءة)
+    // Notifications
     Route::get('/notifications', [NotificationController::class, 'index']);
-
-    // الإشعارات غير المقروءة فقط
     Route::get('/notifications/unread', [NotificationController::class, 'unreadNotifications']);
-
-    // تعليم إشعار كمقروء
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
-
-    // تعليم كل الإشعارات كمقروءة
     Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
-
-    // حذف إشعار
     Route::delete('/notifications/{id}', [NotificationController::class, 'deleteNotification']);
-});
+    Route::get('/my-notifications', function (Request $request) {
+        return response()->json(['notifications' => $request->user()->notifications]);
+    });
 
-// Payment routes
-Route::middleware('auth:sanctum')->group(function () {
-    Route::apiResource('/payments', PaymentController::class);
+    // Payments
+    Route::apiResource('payments', PaymentController::class);
     Route::get('/orders/{order}/payment', [PaymentController::class, 'getOrderPayment']);
     Route::post('/payments/{payment}/verify', [PaymentController::class, 'verify']);
     Route::post('/payments/{payment}/refund', [PaymentController::class, 'refund']);
-    // Stripe Payment Routes
+
+    // Stripe
     Route::post('/stripe/create-payment-intent', [StripePaymentController::class, 'createPaymentIntent']);
     Route::post('/stripe/confirm-payment', [StripePaymentController::class, 'confirmPayment']);
-    // PayPal Payment Routes
+
+    // PayPal
     Route::post('/paypal/create-payment', [PayPalPaymentController::class, 'createPayment']);
     Route::get('/paypal/success/{payment}', [PayPalPaymentController::class, 'success'])->name('paypal.success');
     Route::get('/paypal/cancel/{payment}', [PayPalPaymentController::class, 'cancel'])->name('paypal.cancel');
 });
 
-// Stripe Webhook Route
-Route::post('/stripe/webhook', [StripeWebhookController::class, 'handleWebhook']);
+// Password Reset
+Route::prefix('auth')->group(function () {
+    Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLinkEmail']);
+    Route::post('/reset-password', [PasswordResetController::class, 'reset']);
+});
 
-// PayPal Webhook Route
-Route::post('/paypal/webhook', [PayPalPaymentController::class, 'webhook']);
+// Ratings (public)
+Route::get('/ratings', [RatingController::class, 'index']);
+Route::get('/ratings/{id}', [RatingController::class, 'show']);
 
 // query route for RagChat.jsx frontend
 Route::post('/query', [BookAiSearchController::class, 'search']);
-// إضافة مسار ai-search كما في ai.php
-Route::post('/ai-search', [BookAiSearchController::class, 'search']);
-// إذا أردت دعم chat-messages أيضاً:
-Route::post('/chat-messages', [BookAiSearchController::class, 'search']);
-// endpoint لجلب رسائل الدردشة حسب session_id
-Route::get('/chat-messages/{session_id}', [BookAiSearchController::class, 'history']);
 
-require base_path('routes/ai.php');
+Route::post('/ai-search', [BookAiSearchController::class, 'search'])->name('ai.search');
+

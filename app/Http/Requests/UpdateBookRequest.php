@@ -11,7 +11,7 @@ class UpdateBookRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,20 @@ class UpdateBookRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'title' => 'sometimes|required|string|max:255',
+            'isbn' => 'nullable|string|max:20',
+            'pages' => 'nullable|integer|min:1',
+            'author' => 'nullable|string|max:255',
+            'description' => 'sometimes|required|string',
+            'condition' => 'sometimes|required|in:new,like-new,good,fair,poor',
+            'price' => 'sometimes|required|numeric|min:0',
+            'rental_price' => 'nullable|numeric|min:0',
+            'educational_level' => 'nullable|string|max:50',
+            'genre' => 'nullable|string|max:100',
+            'category_id' => 'sometimes|required|exists:categories,id',
+            'status' => 'sometimes|required|in:available,rented,sold',
+            'quantity' => 'sometimes|required|integer|min:1',
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ];
     }
 }

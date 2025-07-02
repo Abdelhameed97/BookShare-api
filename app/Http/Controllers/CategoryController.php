@@ -21,7 +21,12 @@ class CategoryController extends Controller
      */
     public function store(StoreCategoryRequest $request)
     {
-        //
+        $validatedData = $request->validated();
+        $category = Category::create([
+            'name' => $validatedData['name'],
+            'type' => $validatedData['type'] ?? 'general',
+        ]);
+        // ... existing code ...
     }
 
     /**
@@ -37,7 +42,12 @@ class CategoryController extends Controller
      */
     public function update(UpdateCategoryRequest $request, Category $category)
     {
-        //
+        $validatedData = $request->validated();
+        $category->update([
+            'name' => $validatedData['name'] ?? $category->name,
+            'type' => $validatedData['type'] ?? $category->type,
+        ]);
+        // ... existing code ...
     }
 
     /**
