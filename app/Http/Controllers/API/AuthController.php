@@ -4,91 +4,119 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+
+// ✅ Import requests and models
 use App\Http\Requests\StoreUserRequest;
 use App\Models\User;
 use App\Models\Client;
 use App\Models\Owner;
 
+// ✅ Imports for email verification
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Carbon;
+use App\Mail\VerifyEmailCustom;
+
 class AuthController extends Controller
 {
-    // register
-    public function register(StoreUserRequest $request){
-        // validate request
+    /**
+     * Handle user registration
+     */
+    public function register(StoreUserRequest $request)
+    {
+        // ✅ Validate the request using FormRequest
         $validated = $request->validated();
+
+        // ✅ Accept only specific roles
         $validRoles = ['client', 'owner'];
         $role = in_array($validated['role'] ?? null, $validRoles) ? $validated['role'] : 'client';
 
-
-        // create user
+        // ✅ Create the user
         $user = User::create([
-            'name'=>$validated['name'],
-            'email'=>$validated['email'],
-            'password'=>Hash::make($validated['password']),
-            'role'=>$role, // default role is client
-            'phone_number'=>$validated['phone_number']??null,
-            'national_id'=>$validated['national_id']??null,
-            'location'=>$validated['location']??null,
-
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'role' => $role,
+            'phone_number' => $validated['phone_number'] ?? null,
+            'national_id' => $validated['national_id'] ?? null,
+            'location' => $validated['location'] ?? null,
         ]);
-         // Create related record based on role
-        if ($user->role === 'client') {
+
+        // ✅ Create corresponding client or owner record
+        if ($role === 'client') {
             Client::create(['user_id' => $user->id]);
-        } elseif ($user->role === 'owner') {
+        } elseif ($role === 'owner') {
             Owner::create(['user_id' => $user->id]);
         }
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        // ✅ Generate signed URL for email verification (valid for 60 minutes)
+        $verifyUrl = URL::temporarySignedRoute(
+            'verification.verify', // route name
+            Carbon::now()->addMinutes(60), // expiration
+            ['id' => $user->id, 'hash' => sha1($user->email)] // parameters
+        );
+
+        // ✅ Send the custom email verification
+        Mail::to($user->email)->send(new VerifyEmailCustom($user, $verifyUrl));
+
         return response()->json([
-            'data'=>$user,
-            'access_token'=>$token,
-            'token_type'=>'Bearer',
-        ]);
+            'message' => 'Registered successfully. Please check your email for verification link.',
+        ], 201);
     }
 
-    // login
-    public function login(Request $request){
-
-        // login validation
+    /**
+     * Handle user login
+     */
+    public function login(Request $request)
+    {
+        // ✅ Validate input
         $request->validate([
-            'email'=>'required|email',
-            'password'=>'required',
+            'email' => 'required|email',
+            'password' => 'required',
         ]);
 
-        // get user
-        $user = User::where('email',$request->email)->first();
+        // ✅ Find user by email
+        $user = User::where('email', $request->email)->first();
 
-        // check if user exists and password is correct
-        if(!$user || !Hash::check($request->password, $user->password)){
+        // ❌ If user not found or password incorrect
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response()->json(['message' => 'Invalid login details'], 401);
+        }
+
+        // ✅ Prevent login if email not verified
+        if (!$user->hasVerifiedEmail()) {
             return response()->json([
-                'message'=>'Invalid login details',
-            ],401);
+                'message' => 'Email not verified'
+            ], 403);
         }
 
-        // check if user has any tokens
-
-        $maxTokens = 5;
-
-        if ($user->tokens()->count() >= $maxTokens) {
-            $user->tokens()->oldest()->first()->delete(); // delete oldest token
+        // ✅ Optional: Limit token count to avoid abuse
+        if ($user->tokens()->count() >= 5) {
+            $user->tokens()->oldest()->first()->delete();
         }
+
+        // ✅ Create access token
         $token = $user->createToken('auth_token')->plainTextToken;
 
-
-        // return response
         return response()->json([
-            'data'=>$user,
-            'access_token'=>$token,
-            'token_type'=>'Bearer',
+            'data' => $user,
+            'access_token' => $token,
+            'token_type' => 'Bearer',
         ]);
     }
 
-    public function logout(Request $request){
+    /**
+     * Handle user logout
+     */
+    public function logout(Request $request)
+    {
+        // ✅ Revoke current token
         $request->user()->currentAccessToken()->delete();
+
         return response()->json([
-            'message'=>'Logged out',
+            'message' => 'Logged out',
         ]);
     }
 }

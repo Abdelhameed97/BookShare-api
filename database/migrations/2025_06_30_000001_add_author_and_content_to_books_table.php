@@ -12,8 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('books', function (Blueprint $table) {
-            $table->string('author')->nullable()->after('status');
-            $table->text('content')->nullable()->after('author');
+            if (!Schema::hasColumn('books', 'author')) {
+                $table->string('author')->nullable()->after('status');
+            }
+            if (!Schema::hasColumn('books', 'content')) {
+                $table->text('content')->nullable()->after('author');
+            }
         });
     }
 
@@ -23,7 +27,12 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('books', function (Blueprint $table) {
-            $table->dropColumn(['author', 'content']);
+            if (Schema::hasColumn('books', 'author')) {
+                $table->dropColumn('author');
+            }
+            if (Schema::hasColumn('books', 'content')) {
+                $table->dropColumn('content');
+            }
         });
     }
 };

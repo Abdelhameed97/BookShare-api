@@ -18,24 +18,59 @@ class BookAiSearchService
      */
     public function query(string $question, ?string $sessionId = null): array
     {
-        // بحث في الكتب حسب الحقول المعتادة
-        $results = Book::where('title', 'like', "%$question%")
-            ->orWhere('description', 'like', "%$question%")
-            ->orWhere('condition', 'like', "%$question%")
-            ->orWhere('price', 'like', "%$question%")
-            ->orWhere('rental_price', 'like', "%$question%")
-            ->orWhere('educational_level', 'like', "%$question%")
-            ->orWhere('genre', 'like', "%$question%")
-            ->orWhere('status', 'like', "%$question%")
-            ->orWhere('author', 'like', "%$question%") // بحث في المؤلف
-            ->orWhere('content', 'like', "%$question%") // بحث في نص الكتاب إذا كان موجود
-            // بحث في اسم التصنيف المرتبط
-            ->orWhereHas('category', function($q) use ($question) {
-                $q->where('name', 'like', "%$question%")
-                  ->orWhere('type', 'like', "%$question%") ;
-            })
-            ->limit(5)
-            ->get();
+        // استخراج السعر من السؤال إذا وُجد رقم
+        preg_match('/(\d+)/', $question, $matches);
+        $price = isset($matches[1]) ? $matches[1] : null;
+        // استخراج كلمة بحث نصية (مثلاً اسم الكتاب أو المؤلف)
+        $text = trim(preg_replace('/\d+/', '', $question));
+        $text = $text !== '' ? $text : null;
+
+        // ترجمة الكلمة إذا كانت بالعربي
+        $translated = $text;
+        if ($text && $this->isArabic($text)) {
+            $translated = $this->translateToEnglish($text) ?: $text;
+        }
+
+        $results = Book::where(function($q) use ($text, $translated, $price) {
+            if ($text && $price) {
+                $q->where(function($qq) use ($text, $translated) {
+                    $qq->where('title', 'like', "%$text%")
+                       ->orWhere('title', 'like', "%$translated%")
+                       ->orWhere('description', 'like', "%$text%")
+                       ->orWhere('description', 'like', "%$translated%")
+                       ->orWhere('author', 'like', "%$text%")
+                       ->orWhere('author', 'like', "%$translated%")
+                       ->orWhereHas('category', function($q2) use ($text, $translated) {
+                           $q2->where('name', 'like', "%$text%")
+                              ->orWhere('name', 'like', "%$translated%")
+                              ->orWhere('type', 'like', "%$text%")
+                              ->orWhere('type', 'like', "%$translated%") ;
+                       });
+                })
+                ->where(function($qq) use ($price) {
+                    $qq->where('price', $price)
+                       ->orWhere('rental_price', $price);
+                });
+            } elseif ($text) {
+                $q->where('title', 'like', "%$text%")
+                  ->orWhere('title', 'like', "%$translated%")
+                  ->orWhere('description', 'like', "%$text%")
+                  ->orWhere('description', 'like', "%$translated%")
+                  ->orWhere('author', 'like', "%$text%")
+                  ->orWhere('author', 'like', "%$translated%")
+                  ->orWhereHas('category', function($q2) use ($text, $translated) {
+                      $q2->where('name', 'like', "%$text%")
+                         ->orWhere('name', 'like', "%$translated%")
+                         ->orWhere('type', 'like', "%$text%")
+                         ->orWhere('type', 'like', "%$translated%") ;
+                  });
+            } elseif ($price) {
+                $q->where('price', $price)
+                  ->orWhere('rental_price', $price);
+            }
+        })
+        ->limit(5)
+        ->get();
 
         if ($results->count() > 0) {
             return [
@@ -48,6 +83,30 @@ class BookAiSearchService
         return [
             'message' => $answer,
         ];
+    }
+
+    // ترجمة نص للعربية إلى الإنجليزية باستخدام Google Translate API إذا كان متاحًا
+    private function translateToEnglish($text): ?string
+    {
+        $apiKey = config('services.google.api_key');
+        if (!$apiKey) return null;
+        try {
+            $response = \Http::post('https://translation.googleapis.com/language/translate/v2', [
+                'q' => $text,
+                'target' => 'en',
+                'format' => 'text',
+                'key' => $apiKey,
+            ]);
+            if ($response->successful()) {
+                $result = $response->json();
+                if (isset($result['data']['translations'][0]['translatedText'])) {
+                    return $result['data']['translations'][0]['translatedText'];
+                }
+            }
+        } catch (\Throwable $e) {
+            \Log::error('Google Translate API: Exception', ['exception' => $e->getMessage()]);
+        }
+        return null;
     }
 
     /**
