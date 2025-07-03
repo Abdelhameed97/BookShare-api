@@ -24,20 +24,17 @@ use App\Http\Controllers\API\Auth\PasswordResetController;
 use App\Http\Controllers\API\Auth\EmailVerificationController;
 use App\Http\Controllers\SocialAuthController;
 
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\API\CouponController;
 use App\Models\User;
 
 
-
-
-// Public routes
 // ============================
-// 🔐 Auth Routes
+// 🔐 Public routes (No auth required)
 // ============================
 
-// Register + Login
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-
 
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/libraries', function () {
@@ -48,45 +45,36 @@ Route::get('/libraries', function () {
 Route::get('/books', [BookController::class, 'index']);
 Route::get('/books/{book}', [BookController::class, 'show']);
 
-// ============================
-// 📧 Email Verification Routes
-// ============================
-
-// ✅ 1. المستخدم بيدوس على اللينك اللي وصله في الإيميل
+// 📧 Email Verification
 Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
-    ->middleware(['signed']) // ممكن تضيف 'throttle:6,1' لو حبيت
+    ->middleware(['signed'])
     ->name('verification.verify');
 
-// ✅ 2. إعادة إرسال رابط التفعيل
 Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])
     ->middleware(['auth:sanctum'])
     ->name('verification.send');
-// ✅ 2.5 إعادة إرسال رابط التفعيل باستخدام الإيميل
+
 Route::post('/resend-verification-email-by-email', [EmailVerificationController::class, 'resendByEmail']);
 
-
-// ✅ 3. Test route لحماية الـ verified فقط
 Route::middleware(['auth:sanctum', 'verified'])->get('/protected', function () {
     return response()->json(['message' => 'You are verified!']);
 });
-// ============================
 
-
-// ✅ هذا الراوت بيرجع بيانات المستخدم الحالي لو معاه توكن
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-
-// Authenticated routes
+// ============================
+// 🔒 Authenticated Routes
+// ============================
 Route::middleware('auth:sanctum')->group(function () {
     // Auth
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    // User management
+    // Users
     Route::apiResource('users', UserController::class);
 
-    // Categories
+    // Categories (with full CRUD)
     Route::apiResource('categories', CategoryController::class);
 
     // Comments
@@ -102,7 +90,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/wishlist/{id}/move-to-cart', [WishlistController::class, 'moveToCart']);
     Route::post('/wishlist/move-all-to-cart', [WishlistController::class, 'moveAllToCart']);
 
-    // Books
+    // Books (CRUD)
     Route::post('/books', [BookController::class, 'store']);
     Route::put('/books/{id}', [BookController::class, 'update']);
     Route::delete('/books/{id}', [BookController::class, 'destroy']);
@@ -139,32 +127,49 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/payments/{payment}/verify', [PaymentController::class, 'verify']);
     Route::post('/payments/{payment}/refund', [PaymentController::class, 'refund']);
 
-    // Stripe
+    // Stripe Payments
+    Route::put('/orders/{order}/payment-method', [PaymentController::class, 'updatePaymentMethod']);
     Route::post('/stripe/create-payment-intent', [StripePaymentController::class, 'createPaymentIntent']);
     Route::post('/stripe/confirm-payment', [StripePaymentController::class, 'confirmPayment']);
 
-    // PayPal
+    // PayPal Payments
     Route::post('/paypal/create-payment', [PayPalPaymentController::class, 'createPayment']);
     Route::get('/paypal/success/{payment}', [PayPalPaymentController::class, 'success'])->name('paypal.success');
     Route::get('/paypal/cancel/{payment}', [PayPalPaymentController::class, 'cancel'])->name('paypal.cancel');
 });
 
-// Password Reset
+// ============================
+// 🔁 Password Reset
+// ============================
 Route::prefix('auth')->group(function () {
     Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLinkEmail']);
     Route::post('/reset-password', [PasswordResetController::class, 'reset']);
 });
 
-// Ratings (public)
+// ============================
+// ⭐ Public Ratings
+// ============================
 Route::get('/ratings', [RatingController::class, 'index']);
 Route::get('/ratings/{id}', [RatingController::class, 'show']);
 
-// Test Email
+// ============================
+// 📧 Test Email Route
+// ============================
 Route::get('/test-email', function () {
-    Mail::raw('BookShare \uD83D\uDCDA\n    email sent successfully from BookShare \uD83D\uDCDA\ntime: ' . now() . '\n\nWith best regards, team BookShare', function ($message) {
-        $message->to('wwwrehabkamal601@gmail.com')
-            ->subject('test email \uD83C\uDF89    - BookShare');
-    });
+    Mail::raw(
+        "BookShare 📚\nEmail sent successfully from BookShare 📚\nTime: " . now() . "\n\nWith best regards, team BookShare",
+        function ($message) {
+            $message->to('wwwrehabkamal601@gmail.com')
+                ->subject('Test Email 🎉 - BookShare');
+        }
+    );
 
     return response()->json(['message' => 'Test email sent successfully! Check your inbox.']);
+}); // ✅ تم إغلاق القوس هنا بعد ما كان ناقص
+
+// ============================
+// 🎟️ Coupons
+// ============================
+Route::prefix('coupons')->group(function () {
+    Route::post('apply', [CouponController::class, 'apply']);
 });

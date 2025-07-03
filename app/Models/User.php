@@ -25,6 +25,8 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
 use App\Mail\VerifyEmailCustom;
+use App\Models\Cart;
+
 
 class User extends Authenticatable implements MustVerifyEmail, CanResetPassword
 {
@@ -179,4 +181,19 @@ class User extends Authenticatable implements MustVerifyEmail, CanResetPassword
 
     //     Mail::to($this->email)->send(new VerifyEmailCustom($this, $verifyUrl));
     // }
+
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new ResetPasswordNotification($token));
+    }
+
+    public function carts()
+    {
+        return $this->hasMany(Cart::class);
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class, 'client_id');
+    }
 }

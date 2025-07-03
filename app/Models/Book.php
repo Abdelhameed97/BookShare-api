@@ -31,7 +31,16 @@ class Book extends Model
     protected $casts = [
         'quantity' => 'integer',
         'images' => 'array', // Laravel will handle the JSON <-> array conversion automatically
+        'price'    => 'decimal:2',
+        'tax'      => 'decimal:2',
     ];
+
+    public function setPriceAttribute($value)
+    {
+        $price = floatval($value);
+        $this->attributes['price'] = $price;
+        $this->attributes['tax']   = round($price * 0.10, 2);
+    }
 
     //  Relationship: Book belongs to a User (owner)
     public function user()
