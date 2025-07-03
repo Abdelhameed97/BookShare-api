@@ -198,6 +198,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders/{order}/payment', [PaymentController::class, 'getOrderPayment']);
     Route::post('/payments/{payment}/verify', [PaymentController::class, 'verify']);
     Route::post('/payments/{payment}/refund', [PaymentController::class, 'refund']);
+    Route::put('/orders/{order}/payment-method', [PaymentController::class, 'updatePaymentMethod']);
     // Stripe Payment Routes
     Route::post('/stripe/create-payment-intent', [StripePaymentController::class, 'createPaymentIntent']);
     Route::post('/stripe/confirm-payment', [StripePaymentController::class, 'confirmPayment']);

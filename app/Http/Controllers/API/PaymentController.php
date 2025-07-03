@@ -51,6 +51,11 @@ class PaymentController extends Controller
             $user = Auth::user();
             $order = Order::findOrFail($request->order_id);
 
+            // Update payment method first
+            $order->update([
+                'payment_method' => $request->method
+            ]);
+
             if (Gate::denies('create-payment', $order)) {
                 return response()->json([
                     'success' => false,
@@ -205,7 +210,6 @@ class PaymentController extends Controller
         ]);
     }
 
-    // PaymentController.php - Update authorization checks
     public function getOrderPayment($orderId)
     {
         $payment = Payment::where('order_id', $orderId)
@@ -324,5 +328,32 @@ class PaymentController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function updatePaymentMethod(Request $request, Order $order)
+    {
+        $request->validate([
+            'payment_method' => 'required|in:cash,stripe,paypal'
+        ]);
+
+        $user = Auth::user();
+        $userID = Auth::id();
+
+        if ($order->client_id !== $userID && !$user->is_admin) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are not authorized to update this order'
+            ], 403);
+        }
+
+        $order->update([
+            'payment_method' => $request->payment_method
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Payment method updated successfully',
+            'data' => $order
+        ]);
     }
 }
