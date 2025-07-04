@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            // $table->text('description');
             $table->string('type');
             $table->timestamps(); // This will create `created_at` and `updated_at` automatically
         });

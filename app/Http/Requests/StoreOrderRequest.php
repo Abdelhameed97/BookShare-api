@@ -19,6 +19,8 @@ class StoreOrderRequest extends FormRequest
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.type' => 'required|in:buy,rent',
             'payment_method' => 'required|in:cash,stripe,paypal',
+            'coupon_code' => 'nullable|string|exists:coupons,code',
+            'clear_cart' => 'sometimes|boolean'
         ];
     }
 
@@ -35,7 +37,8 @@ class StoreOrderRequest extends FormRequest
             'items.*.quantity.min' => 'Quantity must be at least 1.',
             'items.*.type.required' => 'Purchase type (buy/rent) is required for each item.',
             'items.*.type.in' => 'Purchase type must be either buy or rent.',
-            'payment_method.in' => 'Payment method must be one of: cash, card, stripe, or paypal.',
+            'payment_method.in' => 'Payment method must be one of: cash, stripe, or paypal.',
+            'coupon_code.exists' => 'The coupon code is invalid.'
         ];
     }
 }

@@ -9,7 +9,7 @@
 
         {{-- Logo --}}
         <div style="text-align: center;">
-            <img src="https://drive.google.com/file/d/1b-ocp50yvXTgKstZEzBN072x6raz7JZ6/view?usp=sharing" alt="BookShare Logo" style="max-width: 120px; margin-bottom: 20px;">
+            <img src="{{ url('images/logo.png') }}" alt="BookShare" style="width: 100px; margin-bottom: 20px;">
         </div>
 
         {{-- Greeting --}}
