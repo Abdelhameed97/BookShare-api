@@ -326,6 +326,7 @@ class OrderController extends Controller
         $order->load('client', 'orderItems.book');
         $order->client->notify(new OrderStatusUpdatedNotification($order, 'accepted'));
 
+
         return response()->json(['success' => true, 'message' => 'Order accepted']);
     }
 

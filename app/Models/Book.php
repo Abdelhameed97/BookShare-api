@@ -14,6 +14,9 @@ class Book extends Model
         'user_id',
         'category_id',
         'title',
+        'isbn',
+        'pages',
+        'author',
         'description',
         'condition',
         'price',
@@ -21,6 +24,8 @@ class Book extends Model
         'educational_level',
         'genre',
         'status',
+        'author', // تمت إضافته
+        'content', // تمت إضافته
         'images',
         'quantity',
     ];

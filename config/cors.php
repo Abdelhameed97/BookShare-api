@@ -4,7 +4,7 @@
 // it allows the frontend to make requests to the backend API
 // the frontend is running on http://localhost:3000
 return[
-    'paths' => ['api/*', 'login', 'logout', 'sanctum/csrf-cookie', 'user', 'forgot-password', 'reset-password'],
+    'paths' => ['api/*', 'login', 'logout', 'sanctum/csrf-cookie', 'user', 'forgot-password', 'reset-password', 'email/verification-notification'],
     'allowed_methods' => ['*'],
     'allowed_origins' => ['http://localhost:3000'],
     'allowed_origins_patterns' => [],

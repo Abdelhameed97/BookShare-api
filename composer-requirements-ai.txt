@@ -1,0 +1,4 @@
+# Suggested PHP AI Libraries
+openai-php/laravel
+rubix/ml
+vladkens/laravel-faiss
