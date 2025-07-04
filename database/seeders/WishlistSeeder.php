@@ -12,6 +12,6 @@ class WishlistSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        // No data seeded
     }
 }
