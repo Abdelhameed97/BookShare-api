@@ -84,7 +84,6 @@ class OrderController extends Controller
                 $ownerId = $book->user_id;
                 $unitPrice = $type === 'rent' ? $book->rental_price : $book->price;
 
-                // حساب الضريبة 10%
                 $tax = $unitPrice * 0.10 * $item['quantity'];
                 $totalTax += $tax;
 
@@ -103,12 +102,10 @@ class OrderController extends Controller
                 $subtotal += $unitPrice * $item['quantity'];
             }
 
-            // إلغاء الشحن إذا تجاوز الإجمالي 200
             if ($subtotal > 200) {
                 $shippingFee = 0;
             }
 
-            // حساب الخصم إذا وجد
             $discount = 0;
             if (isset($validated['coupon_code'])) {
                 $coupon = Coupon::where('code', $validated['coupon_code'])
@@ -232,9 +229,18 @@ class OrderController extends Controller
                 return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
             }
 
-            $order->update(['status' => $request->status]);
+            // Restore quantity if status changed to rejected and it was not rejected before
+            if ($request->status === 'rejected' && $order->status !== 'rejected') {
+                foreach ($order->orderItems as $item) {
+                    if ($item->book) {
+                        $item->book->quantity += $item->quantity;
+                        $item->book->save();
+                    }
+                }
+            }
 
-            $order->client->notify(new OrderStatusUpdatedNotification($order, $request->status));
+            $order->update(['status' => $request->status]);
+            $order->client->notify(new OrderStatusUpdatedNotification($order));
 
             return response()->json([
                 'success' => true,
@@ -330,14 +336,21 @@ class OrderController extends Controller
             return response()->json(['success' => false, 'message' => 'You do not own this order.'], 403);
         }
 
+        if ($order->status !== 'rejected') {
+            foreach ($order->orderItems as $item) {
+                if ($item->book) {
+                    $item->book->quantity += $item->quantity;
+                    $item->book->save();
+                }
+            }
+        }
+
         $order->status = 'rejected';
         $order->save();
 
         $order->load('client', 'orderItems.book');
         $order->client->notify(new OrderStatusUpdatedNotification($order, 'rejected'));
 
-        return response()->json(['success' => true, 'message' => 'Order rejected']);
+        return response()->json(['success' => true, 'message' => 'Order rejected and quantities restored']);
     }
-
-
 }
