@@ -23,6 +23,10 @@ class RatingController extends Controller
                 $query->where('book_id', $request->book_id);
             }
 
+            if ($request->has('reviewer_id')) {
+                $query->where('reviewer_id', $request->reviewer_id);
+            }
+
             $ratings = $query->get();
 
             return response()->json([
@@ -40,66 +44,72 @@ class RatingController extends Controller
 
     public function store(StoreRatingRequest $request)
     {
-        $userId = Auth::id();
-        $book = Book::find($request->book_id);
+        try {
+            $userId = Auth::id();
+            $book = Book::find($request->book_id);
 
-        if (!$book) {
+            if (!$book) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Book not found.'
+                ], 404);
+            }
+
+            if ($book->user_id === $userId) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'You cannot rate your own book.'
+                ], 403);
+            }
+
+            // Check for existing rating
+            $existingRating = Rating::where('book_id', $book->id)
+                ->where('reviewer_id', $userId)
+                ->first();
+
+            if ($existingRating) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'You have already rated this book.',
+                    'data' => $existingRating
+                ], 409);
+            }
+
+            $rating = Rating::create([
+                'book_id' => $book->id,
+                'reviewer_id' => $userId,
+                'reviewed_user_id' => $book->user_id,
+                'rating' => $request->rating,
+                'comment' => $request->comment ?? null,
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Rating added successfully.',
+                'data' => $rating->load(['book', 'reviewer', 'reviewedUser'])
+            ], 201);
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Book not found.'
-            ], 404);
+                'message' => 'Failed to add rating',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        if ($book->user_id === $userId) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'You cannot rate your own book.'
-            ], 403);
-        }
-
-        // Check for duplicate rating
-        $alreadyRated = Rating::where('book_id', $book->id)
-                            ->where('reviewer_id', $userId)
-                            ->exists();
-
-        if ($alreadyRated) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'You have already rated this book.'
-            ], 409);
-        }
-
-        $rating = Rating::create([
-            'book_id' => $book->id,
-            'reviewer_id' => $userId,
-            'reviewed_user_id' => $book->user_id,
-            'rating' => $request->rating,
-            'comment' => $request->comment,
-        ]);
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Rating added successfully.',
-            'data' => $rating
-        ], 201);
     }
-
 
     public function show(string $id)
     {
         try {
+            $rating = Rating::with(['book', 'reviewer', 'reviewedUser'])->findOrFail($id);
+
             $user = Auth::user();
-            if (!$user) {
+            if (!$user || ($user->id !== $rating->reviewer_id && !$user->is_admin)) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
             }
 
-            $rating = Rating::with(['book', 'reviewer', 'reviewedUser'])->findOrFail($id);
-
-            if ($user->id !== $rating->reviewer_id && !$user->is_admin) {
-                return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
-            }
-
             return response()->json(['success' => true, 'data' => $rating]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['success' => false, 'message' => 'Rating not found'], 404);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Failed to fetch rating', 'error' => $e->getMessage()], 500);
         }
@@ -107,53 +117,50 @@ class RatingController extends Controller
 
     public function update(UpdateRatingRequest $request, $id)
     {
-        $rating = Rating::find($id);
+        try {
+            $rating = Rating::findOrFail($id);
+            $user = Auth::user();
 
-        if (!$rating) {
+            // Verify user can update this rating
+            if ($user->id !== $rating->reviewer_id && $user->role !== 'admin') {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Unauthorized'
+                ], 403);
+            }
+
+            $rating->update([
+                'rating' => $request->rating,
+                'comment' => $request->comment ?? $rating->comment
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Rating updated successfully.',
+                'data' => $rating->fresh(['book', 'reviewer', 'reviewedUser'])
+            ]);
+        } catch (ModelNotFoundException $e) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Rating not found.'
             ], 404);
-        }
-
-        // Check if the authenticated user is the reviewer or an admin
-        $user = Auth::user();
-        if ($user->id !== $rating->reviewer_id && $user->role !== 'admin') {
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Unauthorized'
-            ], 403);
+                'message' => 'Failed to update rating',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        $rating->update($request->only(['rating', 'comment']));
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Rating updated successfully.',
-            'data' => $rating->fresh(['book', 'reviewer', 'reviewedUser']),
-        ]);
     }
-
 
     public function destroy(string $id)
     {
         try {
             $user = Auth::user();
-
-            if (!$user) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthorized'
-                ], 401);
-            }
-
             $rating = Rating::findOrFail($id);
 
-            // تحقق إن المستخدم هو صاحب التقييم أو أدمن
-            $isAdmin = $user->role === 'admin';
-            $isReviewer = $user->id === $rating->reviewer_id;
-
-            if (!$isAdmin && !$isReviewer) {
+            // Verify user can delete this rating
+            if ($user->id !== $rating->reviewer_id && $user->role !== 'admin') {
                 return response()->json([
                     'success' => false,
                     'message' => 'Forbidden: You are not allowed to delete this rating.'
@@ -166,6 +173,11 @@ class RatingController extends Controller
                 'success' => true,
                 'message' => 'Rating deleted successfully.'
             ]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Rating not found.'
+            ], 404);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -174,5 +186,4 @@ class RatingController extends Controller
             ], 500);
         }
     }
-
 }
