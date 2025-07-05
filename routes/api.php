@@ -20,6 +20,7 @@ use App\Http\Controllers\API\PaymentController;
 use App\Http\Controllers\API\PayPalPaymentController;
 use App\Http\Controllers\API\StripePaymentController;
 use App\Http\Controllers\API\StripeWebhookController;
+use App\Http\Controllers\API\ContactController;
 use App\Http\Controllers\API\Auth\PasswordResetController;
 use App\Http\Controllers\API\Auth\EmailVerificationController;
 use App\Http\Controllers\SocialAuthController;
@@ -94,6 +95,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Comments
     Route::apiResource('comment', CommentController::class);
 
+    // Contact
+    Route::post('/contact', [ContactController::class, 'send']);
+
     // Ratings
     Route::post('/ratings', [RatingController::class, 'store']);
     Route::put('/ratings/{id}', [RatingController::class, 'update']);
@@ -150,6 +154,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/paypal/create-payment', [PayPalPaymentController::class, 'createPayment']);
     Route::get('/paypal/success/{payment}', [PayPalPaymentController::class, 'success'])->name('paypal.success');
     Route::get('/paypal/cancel/{payment}', [PayPalPaymentController::class, 'cancel'])->name('paypal.cancel');
+
+
 });
 
 // ============================
