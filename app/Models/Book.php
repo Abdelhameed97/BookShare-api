@@ -28,6 +28,7 @@ class Book extends Model
         'content', // تمت إضافته
         'images',
         'quantity',
+        'tax',
     ];
 
     protected $casts = [
