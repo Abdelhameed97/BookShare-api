@@ -1,4 +1,3 @@
-{{-- -------------------------------------------------------------------- --}}
 <!DOCTYPE html>
 <html>
 <head>
@@ -19,7 +18,13 @@
         {{-- Order Info --}}
         <p><strong>Order Details:</strong></p>
         <ul>
-            <li><strong>Book Title:</strong> {{ $book->title }}</li>
+            <li><strong>Books:</strong>
+                <ul>
+                    @foreach ($books as $book)
+                        <li>{{ $book->title }}</li>
+                    @endforeach
+                </ul>
+            </li>
             <li><strong>Total Price:</strong> {{ $order->total_price }} EGP</li>
             <li><strong>Payment Method:</strong> {{ $order->payment_method }}</li>
             <li><strong>Order Date:</strong> {{ $order->created_at->format('Y-m-d H:i') }}</li>
@@ -33,7 +38,6 @@
             <li><strong>Phone Number:</strong> {{ $client->phone_number }}</li>
             <li><strong>Location:</strong> {{ $client->location }}</li>
         </ul>
-
 
         {{-- Footer --}}
         <p style="margin-top: 40px;">Best regards,<br>BookShare 📚 Team</p>

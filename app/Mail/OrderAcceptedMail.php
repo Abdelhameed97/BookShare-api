@@ -14,16 +14,17 @@ class OrderAcceptedMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $order, $book, $owner, $client;
+     public $order, $books, $owner, $client;
 
     /**
      * Create a new message instance.
      */
 
+
     public function __construct($order)
     {
         $this->order = $order;
-        $this->book = $order->orderItems->first()->book;
+        $this->books = $order->orderItems->pluck('book');
         $this->owner = $order->owner;
         $this->client = $order->client;
     }
@@ -31,6 +32,12 @@ class OrderAcceptedMail extends Mailable
     public function build()
     {
         return $this->subject('Your Order Has Been Accepted')
-                    ->view('emails.order_accepted');
+                    ->view('emails.order_accepted')
+                    ->with([
+                        'order' => $this->order,
+                        'books' => $this->books,
+                        'owner' => $this->owner,
+                        'client' => $this->client,
+                    ]);
     }
 }

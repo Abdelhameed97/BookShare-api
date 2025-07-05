@@ -6,6 +6,11 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use App\Models\Order;
+use App\Models\User;
+use App\Models\Book;
+use App\Models\OrderItem;
+use App\Models\Owner;
+use App\Models\Client;
 
 class OrderAcceptedNotification extends Mailable
 {

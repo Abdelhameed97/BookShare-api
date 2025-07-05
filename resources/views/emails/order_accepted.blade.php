@@ -22,10 +22,17 @@
         <p><strong>Order Details:</strong></p>
         <ul>
             <li><strong>Order ID:</strong> #{{ $order->id }}</li>
-            <li><strong>Book Title:</strong> {{ $book->title }}</li>
             <li><strong>Total Price:</strong> {{ $order->total_price }} EGP</li>
             <li><strong>Payment Method:</strong> {{ $order->payment_method }}</li>
             <li><strong>Order Date:</strong> {{ $order->created_at->format('Y-m-d H:i') }}</li>
+        </ul>
+
+        {{-- Book Titles --}}
+        <p><strong>Books in your order:</strong></p>
+        <ul>
+            @foreach ($books as $book)
+                <li>{{ $book->title }}</li>
+            @endforeach
         </ul>
 
         {{-- Owner Info --}}
