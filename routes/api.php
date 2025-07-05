@@ -26,6 +26,8 @@ use App\Http\Controllers\SocialAuthController;
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\API\CouponController;
+use App\Http\Controllers\BookAiSearchController;
+
 use App\Models\User;
 
 
@@ -36,7 +38,19 @@ use App\Models\User;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+ //category
+// Public category routes (index and show)
 Route::get('/categories', [CategoryController::class, 'index']);
+Route::get('/categories/{category}', [CategoryController::class, 'show']);
+
+// Protected category routes (create, update, delete)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/categories', [CategoryController::class, 'store']);
+    Route::put('/categories/{category}', [CategoryController::class, 'update']);
+    Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
+});
+
+
 Route::get('/libraries', function () {
     $owners = User::where('role', 'owner')->get();
     return response()->json(['success' => true, 'data' => $owners]);
@@ -173,3 +187,10 @@ Route::get('/test-email', function () {
 Route::prefix('coupons')->group(function () {
     Route::post('apply', [CouponController::class, 'apply']);
 });
+
+
+// ============================
+// 🏦 AI Rag Chat  
+// ============================
+
+Route::post('/query', [BookAiSearchController::class, 'search']);
