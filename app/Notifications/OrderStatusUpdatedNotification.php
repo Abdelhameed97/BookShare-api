@@ -37,9 +37,9 @@ class OrderStatusUpdatedNotification extends Notification
             ->view("emails.order_{$this->status}", [
                 'client' => $notifiable,
                 'order' => $this->order,
-                'book' => $this->order->orderItems->first()->book,
+                'books' => $this->order->orderItems->pluck('book')->filter(), // ✅ كل الكتب هتظهر هنا
+                'owner' => $this->order->owner,
             ]);
-
     }
 
     public function toArray($notifiable)

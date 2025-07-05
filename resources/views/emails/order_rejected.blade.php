@@ -23,25 +23,29 @@
         <p><strong>Order Summary:</strong></p>
         <ul>
             <li><strong>Order ID:</strong> #{{ $order->id }}</li>
-            <li><strong>Book Title:</strong> {{ $book->title }}</li>
             <li><strong>Total Price:</strong> {{ $order->total_price }} EGP</li>
             <li><strong>Payment Method:</strong> {{ $order->payment_method }}</li>
             <li><strong>Order Date:</strong> {{ $order->created_at->format('Y-m-d H:i') }}</li>
         </ul>
 
-        {{-- Optional Reason (if available) --}}
-        @if(!empty($rejection_reason))
+        {{-- Book Titles --}}
+        <p><strong>Books in your order:</strong></p>
+        <ul>
+            @foreach ($books as $book)
+                <li>{{ $book->title }}</li>
+            @endforeach
+        </ul>
+
+        {{-- Optional Reason --}}
+        {{-- @if(!empty($rejection_reason))
             <p><strong>Reason for rejection:</strong></p>
             <blockquote style="background: #f8d7da; padding: 10px; border-left: 5px solid #dc3545;">
                 {{ $rejection_reason }}
             </blockquote>
-        @endif
+        @endif --}}
 
         <p>We understand this might be disappointing. You can still explore other books on BookShare.</p>
 
-        <div style="text-align: center; margin-top: 30px;">
-            <a href="{{ url('/books') }}" style="display: inline-block; padding: 10px 20px; background: #007bff; color: #fff; border-radius: 5px; text-decoration: none;">Browse More Books</a>
-        </div>
 
         <p style="margin-top: 40px;">Thank you for using BookShare!</p>
         <p>Warm regards,<br>BookShare 📚 Team</p>
